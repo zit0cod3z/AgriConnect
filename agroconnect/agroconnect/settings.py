@@ -66,23 +66,26 @@ TEMPLATES = [{
 WSGI_APPLICATION = 'agroconnect.wsgi.application'
 
 # ── Database ──────────────────────────────────────────────────────────────────
-# Render provides DATABASE_URL for Postgres; falls back to SQLite locally
-import dj_database_url
-
+# On Render: DATABASE_PATH=/data/db.sqlite3 (persistent disk)
+# Locally:   falls back to BASE_DIR/db.sqlite3
 DATABASE_URL = os.environ.get('DATABASE_URL')
+DATABASE_PATH = os.environ.get('DATABASE_PATH')
+
 if DATABASE_URL:
+    # Postgres (optional — if you attach a DB manually later)
+    import dj_database_url
     DATABASES = {
         'default': dj_database_url.config(
             default=DATABASE_URL,
             conn_max_age=600,
-            ssl_require=True,
+            ssl_require=not DEBUG,
         )
     }
 else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'NAME': DATABASE_PATH if DATABASE_PATH else BASE_DIR / 'db.sqlite3',
             'OPTIONS': {'timeout': 20},
         }
     }

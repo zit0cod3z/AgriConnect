@@ -7,29 +7,44 @@ services:
     startCommand: "gunicorn agroconnect.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
     plan: free
 
+    # Persistent disk so SQLite survives redeploys (free tier = no Postgres needed)
+    disk:
+      name: agroconnect-data
+      mountPath: /data
+      sizeGB: 1
+
     envVars:
       - key: DEBUG
         value: "False"
 
       - key: SECRET_KEY
-        generateValue: true          # Render generates a secure random value
+        generateValue: true
 
       - key: PYTHON_VERSION
         value: "3.11.9"
 
-      - key: DATABASE_URL
-        fromDatabase:
-          name: agroconnect-db
-          property: connectionString
+      # SQLite stored on the persistent disk at /data/db.sqlite3
+      - key: DATABASE_PATH
+        value: "/data/db.sqlite3"
+
+      # Admin auto-created on first deploy
+      - key: DJANGO_SUPERUSER_EMAIL
+        value: "admin@agroconnect.ng"
+
+      - key: DJANGO_SUPERUSER_USERNAME
+        value: "admin@agroconnect.ng"
+
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false          # ← You set this in Render dashboard (Environment tab)
 
       - key: PAYSTACK_SECRET_KEY
-        sync: false                   # You paste this manually in Render dashboard
+        sync: false
 
       - key: PAYSTACK_CALLBACK_URL
-        sync: false                   # Set after deploy: https://your-app.onrender.com/payments/callback/
+        sync: false
 
       - key: SMS_BACKEND
-        value: "console"              # Change to "africastalking" when ready
+        value: "console"
 
       - key: EMAIL_HOST
         sync: false
@@ -42,8 +57,3 @@ services:
 
       - key: DEFAULT_FROM_EMAIL
         value: "noreply@agroconnect.ng"
-
-databases:
-  - name: agroconnect-db
-    databaseName: agroconnect
-    plan: free

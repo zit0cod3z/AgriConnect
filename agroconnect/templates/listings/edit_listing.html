@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Edit Listing — AgroConnect{% endblock %}
+{% block content %}
+<div class="container" style="max-width:620px;padding-top:30px;padding-bottom:60px;">
+  <h2 class="section-heading">&#9998; Edit Listing</h2>
+  {% if step == 'verify' %}
+  <div class="panel panel-default">
+    <div class="panel-heading"><strong>&#128274; Verify Access</strong></div>
+    <div class="panel-body">
+      <p>Enter your reference code and phone number to edit this listing.</p>
+      <form method="post" class="form-agro">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group{% if field.errors %} has-error{% endif %}">
+          <label>{{ field.label }}</label>{{ field }}
+          {% for e in field.errors %}<span class="help-block">{{ e }}</span>{% endfor %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-agro-secondary">Verify</button>
+      </form>
+    </div>
+  </div>
+  {% else %}
+  <div class="panel panel-default">
+    <div class="panel-body">
+      <form method="post" class="form-agro">
+        {% csrf_token %}
+        <input type="hidden" name="verified" value="1">
+        <div class="row">
+          {% for field in form %}
+          <div class="col-sm-{% if field.name == 'description' %}12{% else %}6{% endif %}">
+            <div class="form-group{% if field.errors %} has-error{% endif %}">
+              <label>{{ field.label }}</label>{{ field }}
+              {% for e in field.errors %}<span class="help-block">{{ e }}</span>{% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        <button type="submit" class="btn btn-agro-primary btn-lg">Save Changes</button>
+        <a href="{% url 'listings:detail' ref_code %}" class="btn btn-default btn-lg" style="margin-left:8px;">Cancel</a>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+<footer class="site-footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-sm-4">
+        <div class="footer-heading">AgroConnect</div>
+        <p>Connecting Nigerian farmers to customers at farm-gate prices. Freshness you can trust.</p>
+      </div>
+      <div class="col-sm-2">
+        <div class="footer-heading">Marketplace</div>
+        <ul class="list-unstyled">
+          <li><a href="{% url 'listings:catalogue' %}">Browse Listings</a></li>
+          <li><a href="{% url 'listings:create' %}">Post Produce</a></li>
+          <li><a href="{% url 'listings:search' %}">Search</a></li>
+        </ul>
+      </div>
+      <div class="col-sm-2">
+        <div class="footer-heading">Tools</div>
+        <ul class="list-unstyled">
+          <li><a href="{% url 'seasonal:guide' %}">Seasonal Guide</a></li>
+          <li><a href="{% url 'seasonal:calendar' %}">Harvest Calendar</a></li>
+          <li><a href="{% url 'broadcasts:feed' %}">Price Broadcasts</a></li>
+        </ul>
+      </div>
+      <div class="col-sm-2">
+        <div class="footer-heading">Account</div>
+        <ul class="list-unstyled">
+          <li><a href="{% url 'accounts:register' %}">Register</a></li>
+          <li><a href="{% url 'accounts:login' %}">Login</a></li>
+          <li><a href="{% url 'stories:feed' %}">Farm Stories</a></li>
+        </ul>
+      </div>
+      <div class="col-sm-2">
+        <div class="footer-heading">Contact</div>
+        <p style="font-size:12px;">SMS: +234-800-AGRO<br>
+        Mon–Sat 7am – 7pm</p>
+      </div>
+    </div>
+    <hr style="border-color:rgba(255,255,255,0.15);margin:20px 0 12px;">
+    <p class="text-center" style="margin:0;font-size:12px;">&copy; {% now "Y" %} AgroConnect. All rights reserved.</p>
+  </div>
+</footer>

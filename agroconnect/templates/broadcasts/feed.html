@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Price Broadcasts — AgroConnect{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:30px;padding-bottom:60px;">
+  <div class="row">
+    <div class="col-md-8">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h2 class="section-heading" style="margin:0;">&#128288; Price Broadcasts</h2>
+        <a href="{% url 'broadcasts:create' %}" class="btn btn-agro-primary">&#43; Post a Broadcast</a>
+      </div>
+      <p class="text-muted" style="margin-bottom:24px;">Buyers posting their needs — farmers respond with your best price.</p>
+
+      {% if broadcasts %}
+      {% for b in broadcasts %}
+      <div class="panel panel-default" style="border-left:4px solid #F9A825;">
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-sm-8">
+              <h4 style="margin:0 0 6px;font-weight:700;">{{ b.produce_name }}</h4>
+              <p style="margin:0;font-size:13px;color:#555;">{{ b.message|default:"Looking for fresh supply." }}</p>
+              <div style="margin-top:8px;font-size:13px;">
+                <strong style="color:#2E7D32;">&#8358;{{ b.offered_price|floatformat:2 }}</strong> for
+                <strong>{{ b.quantity_wanted }} {{ b.unit }}</strong>
+                &bull; &#128205; {{ b.state }}
+              </div>
+            </div>
+            <div class="col-sm-4 text-right">
+              <div class="text-muted" style="font-size:12px;">{{ b.created_at|timesince }} ago</div>
+              <div style="font-size:12px;margin-top:4px;">{{ b.interests.count }} interested</div>
+              {% if user.is_authenticated %}
+              <a href="{% url 'broadcasts:interest' b.pk %}" class="btn btn-agro-secondary btn-sm" style="margin-top:8px;">I Can Supply</a>
+              {% else %}
+              <a href="{% url 'accounts:login' %}" class="btn btn-agro-secondary btn-sm" style="margin-top:8px;">Login to Respond</a>
+              {% endif %}
+            </div>
+          </div>
+          <div style="margin-top:10px;padding-top:8px;border-top:1px solid #eee;font-size:11px;color:#9E9E9E;">
+            Posted by {{ b.broadcaster_name }}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="text-center" style="padding:60px 20px;">
+        <div style="font-size:60px;">&#128288;</div>
+        <h3>No active price broadcasts</h3>
+        <p class="text-muted">Be the first to post your buying needs!</p>
+        <a href="{% url 'broadcasts:create' %}" class="btn btn-agro-primary btn-lg" style="margin-top:12px;">Post a Broadcast</a>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="col-md-4">
+      <div class="panel panel-default">
+        <div class="panel-heading" style="background:#2E7D32;color:#fff;"><strong>How It Works</strong></div>
+        <div class="panel-body" style="font-size:13px;">
+          <ol style="padding-left:18px;">
+            <li style="margin-bottom:8px;">Buyers post what they need, how much, and at what price</li>
+            <li style="margin-bottom:8px;">Farmers browse and respond if they can supply</li>
+            <li style="margin-bottom:8px;">Both parties connect to complete the deal</li>
+          </ol>
+          <a href="{% url 'broadcasts:create' %}" class="btn btn-agro-primary btn-sm btn-block">Post Your Request</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

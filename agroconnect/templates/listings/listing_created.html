@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Listing Created — AgroConnect{% endblock %}
+{% block content %}
+<div class="container text-center" style="padding:60px 20px;max-width:560px;">
+  <div style="font-size:64px;">&#127807;</div>
+  <h2 style="color:#2E7D32;font-weight:700;">Listing Posted!</h2>
+  <p style="font-size:15px;">Your produce is now live on the marketplace.</p>
+
+  <div class="panel panel-default" style="margin:30px auto;max-width:400px;">
+    <div class="panel-heading" style="background:#2E7D32;color:#fff;">
+      <strong>&#128274; Your Reference Code</strong>
+    </div>
+    <div class="panel-body">
+      <div style="font-size:28px;font-weight:700;letter-spacing:3px;color:#2E7D32;font-family:monospace;">
+        {{ listing.reference_code }}
+      </div>
+      <p class="text-muted" style="font-size:13px;margin-top:10px;">
+        Save this code! You'll need it with your phone number to edit or remove your listing.
+      </p>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:20px;">
+    <div class="col-sm-6" style="margin-bottom:10px;">
+      <a href="{% url 'listings:detail' listing.reference_code %}" class="btn btn-agro-secondary btn-block">View Listing</a>
+    </div>
+    <div class="col-sm-6">
+      <a href="{% url 'listings:create' %}" class="btn btn-agro-primary btn-block">Post Another</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% load static %}
+<nav class="navbar navbar-agroconnect navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-nav">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="/">Agro<span>Connect</span></a>
+    </div>
+    <div class="collapse navbar-collapse" id="main-nav">
+      <ul class="nav navbar-nav">
+        <li><a href="{% url 'listings:catalogue' %}">Marketplace</a></li>
+        <li><a href="{% url 'listings:create' %}">Sell Produce</a></li>
+        <li><a href="{% url 'broadcasts:feed' %}">Price Feeds</a></li>
+        <li><a href="{% url 'seasonal:guide' %}">Seasonal Guide</a></li>
+        <li><a href="{% url 'stories:feed' %}">Farm Stories</a></li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <!-- Search -->
+        <li>
+          <form class="navbar-form" action="{% url 'listings:search' %}" method="get">
+            <div class="input-group" style="width:200px;">
+              <input type="text" name="q" class="form-control input-sm" placeholder="Search produce...">
+              <span class="input-group-btn">
+                <button class="btn btn-agro-primary btn-sm" type="submit">&#128269;</button>
+              </span>
+            </div>
+          </form>
+        </li>
+        {% if user.is_authenticated %}
+        <!-- Notification bell -->
+        <li>
+          <a href="{% url 'notifications:list' %}" class="notif-bell" title="Notifications">
+            &#128276;
+            <span class="notif-badge" id="notif-count" style="display:none;">0</span>
+          </a>
+        </li>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+            {{ user.get_full_name|default:user.username }} <b class="caret"></b>
+          </a>
+          <ul class="dropdown-menu">
+            <li><a href="{% url 'accounts:dashboard' %}">My Dashboard</a></li>
+            <li><a href="{% url 'orders:list' %}">My Orders</a></li>
+            <li><a href="{% url 'listings:catalogue' %}?farmer={{ user.pk }}">My Listings</a></li>
+            <li class="divider"></li>
+            {% if user.is_staff %}
+            <li><a href="{% url 'admin_panel:dashboard' %}">&#128736; Admin Panel</a></li>
+            <li class="divider"></li>
+            {% endif %}
+            <li><a href="{% url 'accounts:logout' %}">Logout</a></li>
+          </ul>
+        </li>
+        {% else %}
+        <li><a href="{% url 'accounts:login' %}">Login</a></li>
+        <li><a href="{% url 'accounts:register' %}" class="btn btn-agro-primary navbar-btn" style="margin-left:8px;">Register</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+<div style="height:50px;"></div><!-- navbar-fixed-top spacer -->

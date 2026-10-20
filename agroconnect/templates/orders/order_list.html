@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}My Orders — AgroConnect{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:30px;padding-bottom:60px;">
+  <h2 class="section-heading">My Orders</h2>
+  {% if orders %}
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>#</th><th>Produce</th><th>Qty</th><th>Price</th><th>Status</th><th>Payment</th><th>Date</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td><strong>#{{ order.pk }}</strong></td>
+          <td>{{ order.deal.offer.listing.produce_name }}</td>
+          <td>{{ order.deal.agreed_quantity }} {{ order.deal.offer.listing.unit }}</td>
+          <td>&#8358;{{ order.deal.agreed_price|floatformat:2 }}</td>
+          <td>
+            <span class="label label-{% if order.status == 'delivered' %}success{% elif order.status == 'cancelled' %}danger{% else %}default{% endif %}">
+              {{ order.get_status_display }}
+            </span>
+          </td>
+          <td>{{ order.get_delivery_method_display }}</td>
+          <td>{{ order.created_at|date:"d M Y" }}</td>
+          <td><a href="{% url 'orders:detail' order.pk %}" class="btn btn-agro-secondary btn-xs">View</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center" style="padding:60px 20px;">
+    <div style="font-size:60px;">&#128230;</div>
+    <h3>No orders yet</h3>
+    <p class="text-muted">Start buying produce from the marketplace.</p>
+    <a href="{% url 'listings:catalogue' %}" class="btn btn-agro-primary btn-lg" style="margin-top:12px;">Browse Marketplace</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Moderation Queue — AgroConnect Admin{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:30px;padding-bottom:60px;">
+  <h2 class="section-heading">&#128270; Moderation Queue</h2>
+
+  <h4>Flagged Listings ({{ flagged_listings.count }})</h4>
+  {% if flagged_listings %}
+  <div class="table-responsive" style="margin-bottom:30px;">
+    <table class="table table-hover" style="font-size:13px;">
+      <thead><tr><th>ID</th><th>Produce</th><th>State</th><th>Contact Phone</th><th>Created</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for listing in flagged_listings %}
+        <tr>
+          <td>{{ listing.pk }}</td>
+          <td>{{ listing.produce_name }}</td>
+          <td>{{ listing.farm_state }}</td>
+          <td>{{ listing.contact_phone }}</td>
+          <td>{{ listing.created_at|date:"d M Y" }}</td>
+          <td>
+            <form method="post" action="{% url 'admin_panel:deactivate_listing' listing.pk %}" style="display:inline;">
+              {% csrf_token %}
+              <button class="btn btn-danger btn-xs" onclick="return confirm('Deactivate this listing?')">Deactivate</button>
+            </form>
+            <a href="{% url 'listings:detail' listing.reference_code %}" class="btn btn-default btn-xs">View</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted">No flagged listings.</p>
+  {% endif %}
+
+  <h4>Flagged Reviews ({{ flagged_reviews.count }})</h4>
+  {% if flagged_reviews %}
+  <div class="table-responsive">
+    <table class="table table-hover" style="font-size:13px;">
+      <thead><tr><th>ID</th><th>Farmer Phone</th><th>Stars</th><th>Review</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for review in flagged_reviews %}
+        <tr>
+          <td>{{ review.pk }}</td>
+          <td>{{ review.farmer_phone }}</td>
+          <td>{{ review.stars }}&#9733;</td>
+          <td>{{ review.review_text|truncatechars:80 }}</td>
+          <td>
+            <form method="post" action="{% url 'admin_panel:remove_review' review.pk %}" style="display:inline;">
+              {% csrf_token %}
+              <button class="btn btn-danger btn-xs" onclick="return confirm('Remove this review?')">Remove</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted">No flagged reviews.</p>
+  {% endif %}
+</div>
+{% endblock %}

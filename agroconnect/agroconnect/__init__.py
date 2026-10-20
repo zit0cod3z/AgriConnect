@@ -1,0 +1,1 @@
+# AgroConnect Django project

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Register — AgroConnect{% endblock %}
+{% block content %}
+<div class="container" style="max-width:480px;padding-top:40px;padding-bottom:60px;">
+  <div class="panel panel-default">
+    <div class="panel-heading" style="background:#2E7D32;color:#fff;">
+      <h3 class="panel-title" style="font-size:18px;">&#127807; Create Your Account</h3>
+    </div>
+    <div class="panel-body">
+      <form method="post" class="form-agro">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group{% if field.errors %} has-error{% endif %}">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% for error in field.errors %}
+          <span class="help-block">{{ error }}</span>
+          {% endfor %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-agro-primary btn-block btn-lg">Create Account</button>
+      </form>
+      <hr>
+      <p class="text-center" style="margin:0;">Already have an account? <a href="{% url 'accounts:login' %}">Login</a></p>
+    </div>
+  </div>
+</div>
+{% endblock %}

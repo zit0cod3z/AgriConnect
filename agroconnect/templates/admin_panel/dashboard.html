@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — AgroConnect{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:30px;padding-bottom:60px;">
+  <h2 class="section-heading">&#128736; Admin Dashboard</h2>
+  <div class="row" style="margin-bottom:30px;">
+    <div class="col-sm-4 col-md-2" style="margin-bottom:14px;">
+      <div class="kpi-card" style="border-top:4px solid #2E7D32;">
+        <div class="kpi-number">{{ stats.active_listings }}</div>
+        <div class="kpi-label">Active Listings</div>
+      </div>
+    </div>
+    <div class="col-sm-4 col-md-2" style="margin-bottom:14px;">
+      <div class="kpi-card" style="border-top:4px solid #F9A825;">
+        <div class="kpi-number">{{ stats.total_customers }}</div>
+        <div class="kpi-label">Customers</div>
+      </div>
+    </div>
+    <div class="col-sm-4 col-md-2" style="margin-bottom:14px;">
+      <div class="kpi-card" style="border-top:4px solid #2E7D32;">
+        <div class="kpi-number">{{ stats.groupbuys_in_progress }}</div>
+        <div class="kpi-label">Active Group Buys</div>
+      </div>
+    </div>
+    <div class="col-sm-4 col-md-2" style="margin-bottom:14px;">
+      <div class="kpi-card" style="border-top:4px solid #F9A825;">
+        <div class="kpi-number">{{ stats.active_broadcasts }}</div>
+        <div class="kpi-label">Live Broadcasts</div>
+      </div>
+    </div>
+    <div class="col-sm-4 col-md-4" style="margin-bottom:14px;">
+      <div class="kpi-card" style="border-top:4px solid #2E7D32;">
+        <div class="kpi-number" style="font-size:18px;">
+          {% for status, count in stats.orders_by_status.items %}
+          <span title="{{ status }}" style="font-size:12px;display:block;">{{ status }}: {{ count }}</span>
+          {% endfor %}
+        </div>
+        <div class="kpi-label">Orders by Status</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-3">
+      <div class="list-group">
+        <a href="{% url 'admin_panel:dashboard' %}" class="list-group-item active">&#128736; Dashboard</a>
+        <a href="{% url 'admin_panel:moderation' %}" class="list-group-item">&#128270; Moderation Queue</a>
+        <a href="{% url 'admin_panel:audit_log' %}" class="list-group-item">&#128196; Audit Log</a>
+        <a href="/django-admin/" class="list-group-item">&#9881; Django Admin</a>
+      </div>
+    </div>
+    <div class="col-md-9">
+      <h4>Quick Actions</h4>
+      <div class="row">
+        <div class="col-sm-4"><a href="{% url 'admin_panel:moderation' %}" class="btn btn-agro-secondary btn-block" style="margin-bottom:10px;">&#128270; Review Flagged Content</a></div>
+        <div class="col-sm-4"><a href="{% url 'admin_panel:audit_log' %}" class="btn btn-agro-secondary btn-block" style="margin-bottom:10px;">&#128196; View Audit Log</a></div>
+        <div class="col-sm-4"><a href="{% url 'listings:catalogue' %}" class="btn btn-agro-secondary btn-block" style="margin-bottom:10px;">&#127807; Browse Listings</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

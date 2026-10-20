@@ -1,0 +1,31 @@
+{% with s=order.status %}
+<ul class="order-timeline">
+  <li class="{% if s in 'pending_confirmation,confirmed,ready,in_transit,delivered,closed' %}active{% else %}current{% endif %}">
+    <div class="tl-dot"></div>
+    <strong>Order Placed</strong><br>
+    <small class="text-muted">{{ order.created_at|date:"d M H:i" }}</small>
+  </li>
+  <li class="{% if s in 'confirmed,ready,in_transit,delivered,closed' %}active{% elif s == 'pending_confirmation' %}current{% endif %}">
+    <div class="tl-dot"></div>
+    <strong>Confirmed</strong>
+  </li>
+  <li class="{% if s in 'in_transit,delivered,closed' %}active{% elif s in 'confirmed,ready' %}current{% endif %}">
+    <div class="tl-dot"></div>
+    <strong>In Transit</strong>
+  </li>
+  <li class="{% if s in 'delivered,closed' %}active{% elif s == 'in_transit' %}current{% endif %}">
+    <div class="tl-dot"></div>
+    <strong>Delivered</strong>
+  </li>
+  <li class="{% if s == 'closed' %}active{% elif s == 'delivered' %}current{% endif %}">
+    <div class="tl-dot"></div>
+    <strong>Closed</strong>
+  </li>
+  {% if s == 'cancelled' %}
+  <li>
+    <div class="tl-dot" style="background:#c62828;"></div>
+    <strong style="color:#c62828;">Cancelled</strong>
+  </li>
+  {% endif %}
+</ul>
+{% endwith %}

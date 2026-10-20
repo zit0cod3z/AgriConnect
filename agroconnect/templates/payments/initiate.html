@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Secure Payment — AgroConnect{% endblock %}
+{% block content %}
+<div class="container text-center" style="padding:60px 20px;max-width:500px;">
+  <div style="font-size:56px;">&#128274;</div>
+  <h2>Secure Online Payment</h2>
+  <div class="panel panel-default" style="margin:24px auto;">
+    <div class="panel-body">
+      <table class="table table-condensed" style="font-size:14px;">
+        <tr><td>Order</td><td><strong>#{{ order.pk }}</strong></td></tr>
+        <tr><td>Produce</td><td>{{ order.deal.offer.listing.produce_name }}</td></tr>
+        <tr><td>Amount</td><td><strong style="color:#2E7D32;font-size:18px;">&#8358;{{ order.deal.agreed_price|floatformat:2 }}</strong></td></tr>
+      </table>
+      <form method="post">
+        {% csrf_token %}
+        <p class="text-muted" style="font-size:12px;margin-bottom:16px;">You'll be redirected to Paystack's secure payment page.</p>
+        <button type="submit" class="btn btn-agro-primary btn-lg btn-block">
+          Pay &#8358;{{ order.deal.agreed_price|floatformat:2 }} via Paystack
+        </button>
+      </form>
+    </div>
+  </div>
+  <p style="font-size:11px;color:#9E9E9E;">Payments are processed securely by Paystack. AgroConnect never stores your card details.</p>
+</div>
+{% endblock %}

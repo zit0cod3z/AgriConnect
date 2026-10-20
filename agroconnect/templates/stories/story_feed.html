@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Farm Stories — AgroConnect{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:30px;padding-bottom:60px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+    <h2 class="section-heading" style="margin:0;">&#127979; Farm Stories</h2>
+    <a href="{% url 'stories:create' %}" class="btn btn-agro-primary">&#43; Share Your Story</a>
+  </div>
+  <p class="text-muted" style="margin-bottom:30px;">Real stories from farmers — from planting to harvest.</p>
+
+  {% if stories %}
+  <div class="row">
+    {% for story in stories %}
+    <div class="col-sm-6 col-md-4" style="margin-bottom:24px;">
+      <div class="story-card">
+        {% if story.photo %}
+        <img src="{{ story.photo.url }}" alt="{{ story.title }}" class="story-img">
+        {% else %}
+        <div style="height:160px;background:#e8f5e9;display:flex;align-items:center;justify-content:center;font-size:48px;">&#127807;</div>
+        {% endif %}
+        <div class="story-body">
+          <div class="story-title">{{ story.title }}</div>
+          <p style="font-size:13px;color:#555;margin-bottom:10px;">{{ story.body|truncatechars:120 }}</p>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;">
+            <span class="text-muted">By {{ story.farmer_name }} &bull; {{ story.created_at|timesince }} ago</span>
+            <span>
+              {% if user.is_authenticated %}
+              <button class="like-btn" data-like-story="{{ story.pk }}" style="font-size:14px;">&#9825;</button>
+              {% else %}
+              <span class="text-muted">&#9825;</span>
+              {% endif %}
+              <span id="like-count-{{ story.pk }}" style="margin-left:4px;font-weight:700;">{{ story.like_count }}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center" style="padding:60px 20px;">
+    <div style="font-size:60px;">&#127979;</div>
+    <h3>No stories yet</h3>
+    <p class="text-muted">Be the first farmer to share your story!</p>
+    <a href="{% url 'stories:create' %}" class="btn btn-agro-primary btn-lg" style="margin-top:12px;">Share Your Story</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

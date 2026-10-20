@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Notifications — AgroConnect{% endblock %}
+{% block content %}
+<div class="container" style="max-width:700px;padding-top:30px;padding-bottom:60px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+    <h2 class="section-heading" style="margin:0;">&#128276; Notifications</h2>
+    <span class="text-muted" style="font-size:13px;">{{ unread_count }} unread</span>
+  </div>
+
+  {% if notifications %}
+  <div class="list-group">
+    {% for n in notifications %}
+    <div class="list-group-item notif-item {% if not n.is_read %}list-group-item-warning unread{% endif %}" style="border-radius:6px;margin-bottom:4px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <strong style="font-size:14px;">{{ n.get_event_type_display }}</strong><br>
+          <span style="font-size:12px;color:#555;">{{ n.created_at|date:"d M Y H:i" }}</span>
+        </div>
+        {% if not n.is_read %}
+        <button class="btn btn-xs btn-agro-secondary" data-mark-read="{{ n.pk }}" style="margin-left:10px;white-space:nowrap;">Mark Read</button>
+        {% else %}
+        <span class="text-muted" style="font-size:11px;">Read</span>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center" style="padding:60px 20px;">
+    <div style="font-size:60px;">&#128276;</div>
+    <h3>All caught up!</h3>
+    <p class="text-muted">No notifications yet.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

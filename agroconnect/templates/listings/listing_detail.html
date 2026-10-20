@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}{{ listing.produce_name }} — AgroConnect{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:30px;padding-bottom:60px;">
+  <div class="row">
+
+    <!-- Main content -->
+    <div class="col-md-8">
+      <!-- Image gallery -->
+      {% if listing.images.exists %}
+      <div id="listing-gallery" class="carousel slide" data-ride="carousel" style="margin-bottom:20px;">
+        <div class="carousel-inner">
+          {% for img in listing.images.all %}
+          <div class="item {% if forloop.first %}active{% endif %}">
+            <img src="{{ img.image.url }}" alt="{{ listing.produce_name }}" style="width:100%;max-height:380px;object-fit:cover;border-radius:6px;">
+          </div>
+          {% endfor %}
+        </div>
+        {% if listing.images.count > 1 %}
+        <a class="left carousel-control" href="#listing-gallery" data-slide="prev" style="background:none;color:#2E7D32;">&#8592;</a>
+        <a class="right carousel-control" href="#listing-gallery" data-slide="next" style="background:none;color:#2E7D32;">&#8594;</a>
+        {% endif %}
+      </div>
+      {% else %}
+      <div style="height:220px;background:#e8f5e9;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:64px;margin-bottom:20px;">&#127807;</div>
+      {% endif %}
+
+      <h1 style="font-size:26px;font-weight:700;margin-bottom:4px;">{{ listing.produce_name }}</h1>
+      <div style="margin-bottom:14px;">
+        <span class="badge-{{ season_status }}">{{ season_status|title|replace:"_":" " }}</span>
+        <span class="label label-default" style="margin-left:6px;">{{ listing.get_category_display }}</span>
+        {% if listing.group_buy_eligible %}<span class="badge-group-buy" style="margin-left:6px;">Group Buy</span>{% endif %}
+      </div>
+
+      {% if listing.description %}
+      <p style="color:#424242;font-size:14px;">{{ listing.description }}</p>
+      {% endif %}
+
+      <!-- Freshness score -->
+      <div class="panel panel-default">
+        <div class="panel-heading"><strong>&#11088; Farmer Freshness Score</strong></div>
+        <div class="panel-body">
+          {% if freshness == 'Not yet rated' %}
+          <span class="text-muted">Not yet rated (needs 3+ reviews)</span>
+          {% else %}
+          <span class="stars-display">
+            {% for i in "12345" %}{% if forloop.counter <= freshness.avg_stars|floatformat:0|add:"0" %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}
+          </span>
+          <strong>{{ freshness.avg_stars|floatformat:1 }}</strong>
+          <span class="text-muted">({{ freshness.count }} reviews)</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Negotiation thread -->
+      {% if user.is_authenticated and thread %}
+      <h4 style="color:#2E7D32;margin-bottom:14px;">Negotiation Thread</h4>
+      {% for item in thread %}
+      <div class="thread-item {{ item.actor }}">
+        <strong>{{ item.actor|title }}</strong>
+        offered &#8358;{{ item.price }} for {{ item.quantity }} units
+        {% if item.message %}<br><em>{{ item.message }}</em>{% endif %}
+        <div class="thread-meta">{{ item.timestamp|date:"d M Y H:i" }} &bull; {{ item.status|upper }}</div>
+      </div>
+      {% endfor %}
+      {% endif %}
+
+      <!-- Make offer -->
+      {% if user.is_authenticated %}
+      <div class="panel panel-default" style="margin-top:20px;">
+        <div class="panel-heading" style="background:#e8f5e9;"><strong>&#128203; Make an Offer</strong></div>
+        <div class="panel-body">
+          <form method="post" action="{% url 'negotiations:submit_offer' listing.reference_code %}" class="form-agro">
+            {% csrf_token %}
+            <div class="row">
+              <div class="col-sm-4">
+                <div class="form-group">
+                  <label>Your Price (&#8358;)</label>
+                  <input type="number" name="proposed_price" class="form-control" min="0" step="0.01" required placeholder="{{ listing.price_per_unit }}">
+                </div>
+              </div>
+              <div class="col-sm-4">
+                <div class="form-group">
+                  <label>Quantity ({{ listing.unit }})</label>
+                  <input type="number" name="proposed_quantity" class="form-control" min="0.01" step="0.01" required>
+                </div>
+              </div>
+              <div class="col-sm-4">
+                <div class="form-group">
+                  <label>Message (optional)</label>
+                  <input type="text" name="message" class="form-control" placeholder="Any message to farmer?">
+                </div>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-agro-primary">Submit Offer</button>
+          </form>
+        </div>
+      </div>
+      {% else %}
+      <div class="alert alert-agro-warning" style="margin-top:20px;">
+        <a href="{% url 'accounts:login' %}">Login</a> to negotiate and buy this produce.
+      </div>
+      {% endif %}
+
+      <!-- Group buy progress -->
+      {% if group_buy %}
+      {% include "groupbuy/progress_widget.html" with group_buy=group_buy listing=listing %}
+      {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-md-4">
+      <div class="panel panel-default">
+        <div class="panel-heading" style="background:#2E7D32;color:#fff;"><strong>Listing Details</strong></div>
+        <div class="panel-body">
+          <table class="table table-condensed" style="margin:0;font-size:13px;">
+            <tr><td><strong>Price</strong></td><td class="text-right" style="color:#2E7D32;font-weight:700;">&#8358;{{ listing.price_per_unit|floatformat:2 }}/{{ listing.unit }}</td></tr>
+            <tr><td><strong>Available</strong></td><td class="text-right">{{ listing.quantity }} {{ listing.unit }}</td></tr>
+            <tr><td><strong>State</strong></td><td class="text-right">{{ listing.farm_state }}</td></tr>
+            <tr><td><strong>LGA</strong></td><td class="text-right">{{ listing.farm_lga }}</td></tr>
+            <tr><td><strong>Category</strong></td><td class="text-right">{{ listing.get_category_display }}</td></tr>
+            <tr><td><strong>Listed</strong></td><td class="text-right">{{ listing.created_at|date:"d M Y" }}</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Manage listing (guest) -->
+      <div class="panel panel-default">
+        <div class="panel-heading"><strong>&#128295; Manage This Listing</strong></div>
+        <div class="panel-body">
+          <p style="font-size:12px;">Are you the farmer? Use your reference code + phone to edit or delete.</p>
+          <a href="{% url 'listings:edit' listing.reference_code %}" class="btn btn-agro-secondary btn-sm btn-block">Edit Listing</a>
+          <form method="post" action="{% url 'listings:delete' listing.reference_code %}" style="margin-top:6px;" onsubmit="return confirm('Remove this listing?');">
+            {% csrf_token %}
+            <div class="form-group">
+              <input type="text" name="reference_code" class="form-control input-sm" placeholder="Reference code">
+            </div>
+            <div class="form-group">
+              <input type="text" name="contact_phone" class="form-control input-sm" placeholder="Contact phone">
+            </div>
+            <button type="submit" class="btn btn-danger btn-sm btn-block">Remove Listing</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

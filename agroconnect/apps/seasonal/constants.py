@@ -1,0 +1,16 @@
+STATE_TO_AGRO_ZONE = {
+    'abia': 'south_east', 'anambra': 'south_east', 'ebonyi': 'south_east',
+    'enugu': 'south_east', 'imo': 'south_east',
+    'adamawa': 'north_east', 'bauchi': 'north_east', 'borno': 'north_east',
+    'gombe': 'north_east', 'taraba': 'north_east', 'yobe': 'north_east',
+    'benue': 'north_central', 'fct': 'north_central', 'kogi': 'north_central',
+    'kwara': 'north_central', 'nasarawa': 'north_central', 'niger': 'north_central',
+    'plateau': 'north_central',
+    'jigawa': 'north_west', 'kaduna': 'north_west', 'kano': 'north_west',
+    'katsina': 'north_west', 'kebbi': 'north_west', 'sokoto': 'north_west',
+    'zamfara': 'north_west',
+    'ekiti': 'south_west', 'lagos': 'south_west', 'ogun': 'south_west',
+    'ondo': 'south_west', 'osun': 'south_west', 'oyo': 'south_west',
+    'akwa ibom': 'south_south', 'bayelsa': 'south_south', 'cross river': 'south_south',
+    'delta': 'south_south', 'edo': 'south_south', 'rivers': 'south_south',
+}

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Marketplace — AgroConnect{% endblock %}
+{% block content %}
+
+<!-- Hero -->
+<div class="hero-banner">
+  <div class="container">
+    <h1>Farm-Fresh Produce at <span>Farm-Gate Prices</span></h1>
+    <p>Browse thousands of verified listings from farmers across Nigeria</p>
+    <div class="hero-search">
+      <form action="{% url 'listings:search' %}" method="get">
+        <div class="input-group">
+          <input type="text" name="q" class="form-control" placeholder="e.g. tomatoes, yam, maize...">
+          <span class="input-group-btn">
+            <button class="btn btn-agro-primary" type="submit">Search</button>
+          </span>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="container" style="padding-top:30px;padding-bottom:60px;">
+  <div class="row">
+
+    <!-- Sidebar -->
+    <div class="col-md-3">
+      <div class="filter-sidebar">
+        <h4>&#128269; Filter</h4>
+        <form method="get">
+          <div class="form-group">
+            <label>Category</label>
+            <select name="category" class="form-control input-sm">
+              <option value="">All Categories</option>
+              {% for val, label in categories %}
+              <option value="{{ val }}" {% if filters.category == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>State</label>
+            <input type="text" name="state" class="form-control input-sm" placeholder="e.g. Lagos" value="{{ filters.farm_state|default:'' }}">
+          </div>
+          <div class="form-group">
+            <label>Min Price (&#8358;)</label>
+            <input type="number" name="price_min" class="form-control input-sm" value="{{ filters.price_min|default:'' }}" min="0">
+          </div>
+          <div class="form-group">
+            <label>Max Price (&#8358;)</label>
+            <input type="number" name="price_max" class="form-control input-sm" value="{{ filters.price_max|default:'' }}" min="0">
+          </div>
+          <button type="submit" class="btn btn-agro-secondary btn-sm btn-block">Apply Filters</button>
+          <a href="{% url 'listings:catalogue' %}" class="btn btn-default btn-sm btn-block" style="margin-top:6px;">Clear</a>
+        </form>
+      </div>
+      <!-- CTA -->
+      <div class="panel panel-default" style="margin-top:16px;">
+        <div class="panel-body text-center">
+          <p style="font-size:13px;margin-bottom:10px;">Are you a farmer?</p>
+          <a href="{% url 'listings:create' %}" class="btn btn-agro-primary btn-block">&#43; Post Your Produce</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Listings grid -->
+    <div class="col-md-9">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <span class="section-heading">{{ listings.paginator.count }} Listing{{ listings.paginator.count|pluralize }}</span>
+        <a href="{% url 'broadcasts:feed' %}" class="btn btn-agro-secondary btn-sm">&#128288; Price Broadcasts</a>
+      </div>
+
+      {% if listings.object_list %}
+      <div class="row">
+        {% for listing in listings %}
+        <div class="col-sm-6 col-md-4" style="margin-bottom:20px;">
+          <div class="listing-card">
+            <div class="card-thumb">
+              {% if listing.images.exists %}
+              <img src="{{ listing.images.first.image.url }}" alt="{{ listing.produce_name }}">
+              {% else %}
+              <span class="thumb-placeholder">&#127807;</span>
+              {% endif %}
+            </div>
+            <div class="card-body">
+              <div class="card-title">{{ listing.produce_name }}</div>
+              <div class="card-price">&#8358;{{ listing.price_per_unit|floatformat:2 }}/{{ listing.unit }}</div>
+              <div class="card-meta">
+                &#128205; {{ listing.farm_state }}, {{ listing.farm_lga }}<br>
+                &#128230; Qty: {{ listing.quantity }} {{ listing.unit }}
+                {% if listing.group_buy_eligible %}<span class="badge-group-buy" style="margin-left:6px;">Group Buy</span>{% endif %}
+              </div>
+            </div>
+            <div class="card-footer-bar">
+              <span class="badge-{{ listing.season_status|default:'off-season' }}">{{ listing.season_status|default:'Off Season'|title }}</span>
+              <a href="{% url 'listings:detail' listing.reference_code %}" class="btn btn-agro-primary btn-xs pull-right">View</a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if listings.has_other_pages %}
+      <nav aria-label="Listings pagination">
+        <ul class="pagination" style="justify-content:center;">
+          {% if listings.has_previous %}
+          <li><a href="?page={{ listings.previous_page_number }}&category={{ filters.category|default:'' }}&state={{ filters.farm_state|default:'' }}">&laquo;</a></li>
+          {% else %}<li class="disabled"><span>&laquo;</span></li>{% endif %}
+          {% for i in listings.paginator.page_range %}
+          <li {% if listings.number == i %}class="active"{% endif %}>
+            <a href="?page={{ i }}&category={{ filters.category|default:'' }}&state={{ filters.farm_state|default:'' }}">{{ i }}</a>
+          </li>
+          {% endfor %}
+          {% if listings.has_next %}
+          <li><a href="?page={{ listings.next_page_number }}&category={{ filters.category|default:'' }}&state={{ filters.farm_state|default:'' }}">&raquo;</a></li>
+          {% else %}<li class="disabled"><span>&raquo;</span></li>{% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+
+      {% else %}
+      <div class="text-center" style="padding:60px 20px;">
+        <div style="font-size:60px;">&#127807;</div>
+        <h3>No listings found</h3>
+        <p class="text-muted">Try adjusting your filters or <a href="{% url 'listings:catalogue' %}">browse all listings</a>.</p>
+        <a href="{% url 'listings:create' %}" class="btn btn-agro-primary btn-lg" style="margin-top:12px;">Be the first to post!</a>
+      </div>
+      {% endif %}
+    </div><!-- /col -->
+  </div><!-- /row -->
+</div>
+{% endblock %}

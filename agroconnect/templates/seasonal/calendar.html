@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Harvest Calendar — AgroConnect{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:30px;padding-bottom:60px;">
+  <h2 class="section-heading">&#128197; Availability Calendar</h2>
+  <!-- Zone filter -->
+  <form method="get" style="margin-bottom:20px;">
+    <div class="row">
+      <div class="col-sm-4">
+        <select name="zone" class="form-control">
+          <option value="">All Geo Zones</option>
+          <option value="north_west" {% if selected_zone == 'north_west' %}selected{% endif %}>North-West</option>
+          <option value="north_east" {% if selected_zone == 'north_east' %}selected{% endif %}>North-East</option>
+          <option value="north_central" {% if selected_zone == 'north_central' %}selected{% endif %}>North-Central</option>
+          <option value="south_west" {% if selected_zone == 'south_west' %}selected{% endif %}>South-West</option>
+          <option value="south_east" {% if selected_zone == 'south_east' %}selected{% endif %}>South-East</option>
+          <option value="south_south" {% if selected_zone == 'south_south' %}selected{% endif %}>South-South</option>
+        </select>
+      </div>
+      <div class="col-sm-2">
+        <button type="submit" class="btn btn-agro-secondary btn-block">Filter</button>
+      </div>
+    </div>
+  </form>
+
+  <!-- Calendar grid -->
+  {% if calendars %}
+  <div class="table-responsive">
+    <table class="table table-bordered" style="font-size:12px;">
+      <thead style="background:#2E7D32;color:#fff;">
+        <tr>
+          <th>Produce / Zone</th>
+          <th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th>
+          <th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cal in calendars %}
+        <tr>
+          <td><strong>{{ cal.produce_category|title }}</strong><br><small class="text-muted">{{ cal.get_geo_zone_display }}</small></td>
+          {% for m in "123456789101112" %}
+          {% with month=forloop.counter %}
+          <td style="text-align:center;padding:4px;">
+            {% if month|stringformat:"s" in cal.available_months %}
+            <span style="color:#2E7D32;font-size:16px;">&#9679;</span>
+            {% else %}
+            <span style="color:#E0E0E0;font-size:16px;">&#9675;</span>
+            {% endif %}
+          </td>
+          {% endwith %}
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center text-muted" style="padding:40px;">No calendar data available.</div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Login — AgroConnect{% endblock %}
+{% block content %}
+<div class="container" style="max-width:440px;padding-top:50px;padding-bottom:60px;">
+  <div class="panel panel-default">
+    <div class="panel-heading" style="background:#2E7D32;color:#fff;">
+      <h3 class="panel-title" style="font-size:18px;">&#128274; Login to AgroConnect</h3>
+    </div>
+    <div class="panel-body">
+      {% if locked %}
+      <div class="alert alert-danger">
+        Account locked due to too many failed attempts. Try again in 15 minutes.
+      </div>
+      {% endif %}
+      <form method="post" class="form-agro">
+        {% csrf_token %}
+        <div class="form-group">
+          <label>Email / Username</label>
+          <input type="text" name="username" class="form-control" placeholder="Enter email or username" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" name="password" class="form-control" placeholder="Enter password" required>
+        </div>
+        <button type="submit" class="btn btn-agro-primary btn-block btn-lg">Login</button>
+      </form>
+      <hr>
+      <p class="text-center" style="margin-bottom:6px;">
+        <a href="{% url 'accounts:password_reset' %}">Forgot password?</a>
+      </p>
+      <p class="text-center" style="margin:0;">
+        New here? <a href="{% url 'accounts:register' %}">Create an account</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

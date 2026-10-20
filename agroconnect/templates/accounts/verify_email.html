@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Verify Email — AgroConnect{% endblock %}
+{% block content %}
+<div class="container text-center" style="padding:60px 20px;">
+  {% if verified %}
+  <div style="font-size:60px;">&#9989;</div>
+  <h2 style="color:#2E7D32;">Email Verified!</h2>
+  <p>Your account is now active. You can start buying and selling.</p>
+  <a href="{% url 'accounts:login' %}" class="btn btn-agro-primary btn-lg">Login Now</a>
+  {% elif expired %}
+  <div style="font-size:60px;">&#9201;</div>
+  <h2>Link Expired</h2>
+  <p>The verification link has expired (valid for 60 minutes). Please request a new one.</p>
+  <a href="{% url 'accounts:dashboard' %}" class="btn btn-agro-secondary">Go to Dashboard</a>
+  {% else %}
+  <div style="font-size:60px;">&#10060;</div>
+  <h2>Invalid Link</h2>
+  <p>This verification link is invalid.</p>
+  <a href="/" class="btn btn-agro-secondary">Go Home</a>
+  {% endif %}
+</div>
+{% endblock %}

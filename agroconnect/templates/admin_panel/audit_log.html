@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Audit Log — AgroConnect Admin{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:30px;padding-bottom:60px;">
+  <h2 class="section-heading">&#128196; Audit Log</h2>
+  <div class="table-responsive">
+    <table class="table table-hover" style="font-size:13px;">
+      <thead style="background:#2E7D32;color:#fff;">
+        <tr><th>When</th><th>Admin</th><th>Entity</th><th>ID</th><th>Action</th><th>Detail</th></tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td>{{ log.timestamp|date:"d M Y H:i" }}</td>
+          <td>{{ log.admin_user.email|default:"—" }}</td>
+          <td>{{ log.entity_type }}</td>
+          <td>{{ log.entity_id }}</td>
+          <td><span class="label label-default">{{ log.action }}</span></td>
+          <td>{{ log.detail|truncatechars:60 }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center text-muted">No audit records yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if logs.has_other_pages %}
+  <ul class="pagination">
+    {% if logs.has_previous %}<li><a href="?page={{ logs.previous_page_number }}">&laquo;</a></li>{% endif %}
+    <li class="active"><span>{{ logs.number }}</span></li>
+    {% if logs.has_next %}<li><a href="?page={{ logs.next_page_number }}">&raquo;</a></li>{% endif %}
+  </ul>
+  {% endif %}
+</div>
+{% endblock %}

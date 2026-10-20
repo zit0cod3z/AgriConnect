@@ -1,0 +1,274 @@
+/* =====================================================
+   AgroConnect — Custom CSS (Bootstrap 3 overrides)
+   Colour scheme: green #2E7D32, yellow #F9A825, white #FFFFFF
+   ===================================================== */
+
+:root {
+  --green: #2E7D32;
+  --green-dark: #1B5E20;
+  --green-light: #4CAF50;
+  --yellow: #F9A825;
+  --yellow-dark: #F57F17;
+  --white: #FFFFFF;
+  --text-dark: #212121;
+  --text-muted: #757575;
+  --surface: #F5F5F5;
+  --border: #E0E0E0;
+}
+
+/* ── Base ── */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--surface);
+  color: var(--text-dark);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+a { color: var(--green); }
+a:hover { color: var(--green-dark); text-decoration: none; }
+
+/* ── Navbar ── */
+.navbar-agroconnect {
+  background-color: var(--green);
+  border: none;
+  border-radius: 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.navbar-agroconnect .navbar-brand {
+  color: var(--white) !important;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.navbar-agroconnect .navbar-brand span { color: var(--yellow); }
+.navbar-agroconnect .nav > li > a {
+  color: rgba(255,255,255,0.85) !important;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.navbar-agroconnect .nav > li > a:hover,
+.navbar-agroconnect .nav > li.active > a {
+  color: var(--yellow) !important;
+  background: transparent;
+}
+.navbar-agroconnect .navbar-toggle .icon-bar { background: var(--white); }
+
+/* ── Buttons ── */
+.btn-agro-primary {
+  background-color: var(--yellow);
+  border-color: var(--yellow-dark);
+  color: var(--text-dark);
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.btn-agro-primary:hover {
+  background-color: var(--yellow-dark);
+  border-color: var(--yellow-dark);
+  color: var(--white);
+}
+.btn-agro-secondary {
+  background-color: var(--green);
+  border-color: var(--green-dark);
+  color: var(--white);
+  font-weight: 600;
+}
+.btn-agro-secondary:hover {
+  background-color: var(--green-dark);
+  color: var(--white);
+}
+
+/* ── Hero / Banner ── */
+.hero-banner {
+  background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+  color: var(--white);
+  padding: 60px 0 50px;
+  text-align: center;
+}
+.hero-banner h1 { font-size: 36px; font-weight: 700; margin-bottom: 12px; }
+.hero-banner h1 span { color: var(--yellow); }
+.hero-banner p { font-size: 16px; opacity: 0.9; margin-bottom: 24px; }
+.hero-search { max-width: 560px; margin: 0 auto; }
+.hero-search .form-control {
+  height: 46px; font-size: 15px; border-right: none;
+  border-radius: 4px 0 0 4px;
+}
+.hero-search .btn { height: 46px; border-radius: 0 4px 4px 0; }
+
+/* ── Cards ── */
+.listing-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  transition: box-shadow 0.25s, transform 0.25s;
+  height: 100%;
+}
+.listing-card:hover {
+  box-shadow: 0 6px 20px rgba(46,125,50,0.15);
+  transform: translateY(-2px);
+}
+.listing-card .card-thumb {
+  height: 180px;
+  background: #e8f5e9;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.listing-card .card-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.listing-card .card-thumb .thumb-placeholder {
+  font-size: 48px; color: var(--green-light);
+}
+.listing-card .card-body { padding: 14px 16px; }
+.listing-card .card-title {
+  font-size: 15px; font-weight: 700;
+  color: var(--text-dark);
+  margin: 0 0 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.listing-card .card-price {
+  font-size: 17px; font-weight: 700; color: var(--green);
+}
+.listing-card .card-meta { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+.listing-card .card-footer-bar {
+  background: #f9f9f9; border-top: 1px solid var(--border);
+  padding: 8px 14px; font-size: 12px;
+}
+
+/* ── Badges ── */
+.badge-in-season {
+  background: var(--green); color: var(--white);
+  border-radius: 12px; padding: 3px 9px; font-size: 11px;
+}
+.badge-off-season {
+  background: var(--text-muted); color: var(--white);
+  border-radius: 12px; padding: 3px 9px; font-size: 11px;
+}
+.badge-group-buy {
+  background: var(--yellow); color: var(--text-dark);
+  border-radius: 12px; padding: 3px 9px; font-size: 11px; font-weight: 600;
+}
+
+/* ── Section headings ── */
+.section-heading {
+  font-size: 22px; font-weight: 700; color: var(--green-dark);
+  margin-bottom: 20px; padding-bottom: 8px;
+  border-bottom: 3px solid var(--yellow);
+  display: inline-block;
+}
+
+/* ── Sidebar filters ── */
+.filter-sidebar {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 18px;
+}
+.filter-sidebar h4 {
+  font-size: 14px; font-weight: 700; color: var(--green);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin-bottom: 14px;
+}
+.filter-sidebar .form-control { font-size: 13px; }
+
+/* ── Notification bell ── */
+.notif-bell { position: relative; display: inline-block; }
+.notif-badge {
+  position: absolute; top: -4px; right: -6px;
+  background: var(--yellow); color: var(--text-dark);
+  border-radius: 50%; width: 18px; height: 18px;
+  font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── Progress bar (group buy) ── */
+.progress-agro .progress-bar {
+  background-color: var(--yellow);
+  color: var(--text-dark);
+  font-weight: 700;
+}
+
+/* ── Negotiation thread ── */
+.thread-item {
+  border-left: 3px solid var(--border);
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  background: var(--white);
+  border-radius: 0 6px 6px 0;
+}
+.thread-item.customer { border-color: var(--green); }
+.thread-item.farmer   { border-color: var(--yellow); }
+.thread-meta { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+/* ── Order status timeline ── */
+.order-timeline { list-style: none; padding: 0; position: relative; }
+.order-timeline::before {
+  content: ''; position: absolute; left: 16px; top: 0; bottom: 0;
+  width: 2px; background: var(--border);
+}
+.order-timeline li {
+  padding: 8px 0 8px 42px; position: relative;
+}
+.order-timeline li .tl-dot {
+  position: absolute; left: 8px; top: 12px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--border); border: 2px solid var(--white);
+}
+.order-timeline li.active .tl-dot { background: var(--green); }
+.order-timeline li.current .tl-dot { background: var(--yellow); }
+
+/* ── Forms ── */
+.form-agro .form-control:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(46,125,50,0.12);
+  outline: none;
+}
+.form-agro label { font-weight: 600; font-size: 13px; color: var(--text-dark); }
+
+/* ── Alert banners ── */
+.alert-agro-success { background: #e8f5e9; border-color: var(--green); color: var(--green-dark); }
+.alert-agro-warning { background: #fffde7; border-color: var(--yellow); color: #7B5800; }
+
+/* ── Footer ── */
+.site-footer {
+  background: var(--green-dark); color: rgba(255,255,255,0.75);
+  padding: 30px 0; margin-top: 50px; font-size: 13px;
+}
+.site-footer a { color: var(--yellow); }
+.site-footer a:hover { color: var(--white); }
+.site-footer .footer-heading { color: var(--white); font-weight: 700; margin-bottom: 10px; }
+
+/* ── Freshness score stars ── */
+.stars-display { color: var(--yellow); letter-spacing: 2px; }
+.stars-muted   { color: var(--border); }
+
+/* ── Story card ── */
+.story-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 6px; overflow: hidden;
+}
+.story-card .story-img { height: 160px; object-fit: cover; width: 100%; }
+.story-card .story-body { padding: 14px; }
+.story-card .story-title { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+.story-card .like-btn { color: var(--yellow); font-weight: 700; background: none; border: none; cursor: pointer; }
+
+/* ── Admin dashboard ── */
+.kpi-card {
+  background: var(--white); border-radius: 6px;
+  border: 1px solid var(--border); padding: 20px;
+  text-align: center;
+}
+.kpi-card .kpi-number { font-size: 36px; font-weight: 700; color: var(--green); }
+.kpi-card .kpi-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
+/* ── Payment status ── */
+.payment-badge-success { background: #e8f5e9; color: var(--green); border-radius: 4px; padding: 3px 8px; }
+.payment-badge-pending { background: #fffde7; color: #7B5800; border-radius: 4px; padding: 3px 8px; }
+.payment-badge-failed  { background: #ffebee; color: #c62828; border-radius: 4px; padding: 3px 8px; }
+
+/* ── Responsive tweaks ── */
+@media (max-width: 767px) {
+  .hero-banner h1 { font-size: 24px; }
+  .hero-banner p  { font-size: 14px; }
+  .listing-card .card-thumb { height: 140px; }
+  .kpi-card .kpi-number { font-size: 26px; }
+}

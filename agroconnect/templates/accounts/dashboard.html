@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — AgroConnect{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:30px;padding-bottom:60px;">
+  <h2 class="section-heading">My Dashboard</h2>
+  <div class="row">
+    <!-- Stats row -->
+    <div class="col-sm-3">
+      <div class="kpi-card" style="border-top:4px solid #2E7D32;">
+        <div class="kpi-number">{{ stats.active_listings }}</div>
+        <div class="kpi-label">Active Listings</div>
+      </div>
+    </div>
+    <div class="col-sm-3">
+      <div class="kpi-card" style="border-top:4px solid #F9A825;">
+        <div class="kpi-number">{{ stats.pending_offers }}</div>
+        <div class="kpi-label">Pending Offers</div>
+      </div>
+    </div>
+    <div class="col-sm-3">
+      <div class="kpi-card" style="border-top:4px solid #2E7D32;">
+        <div class="kpi-number">{{ stats.active_orders }}</div>
+        <div class="kpi-label">Active Orders</div>
+      </div>
+    </div>
+    <div class="col-sm-3">
+      <div class="kpi-card" style="border-top:4px solid #F9A825;">
+        <div class="kpi-number">{{ unread_count }}</div>
+        <div class="kpi-label">Unread Notifications</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:30px;">
+    <!-- Recent orders -->
+    <div class="col-md-6">
+      <h4 class="section-heading">Recent Orders</h4>
+      {% if recent_orders %}
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead><tr><th>#</th><th>Produce</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody>
+          {% for order in recent_orders %}
+          <tr>
+            <td><a href="{% url 'orders:detail' order.pk %}">#{{ order.pk }}</a></td>
+            <td>{{ order.deal.offer.listing.produce_name }}</td>
+            <td><span class="label label-default">{{ order.get_status_display }}</span></td>
+            <td>{{ order.created_at|date:"d M Y" }}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <a href="{% url 'orders:list' %}" class="btn btn-agro-secondary btn-sm">View All Orders</a>
+      {% else %}
+      <p class="text-muted">No orders yet. <a href="{% url 'listings:catalogue' %}">Browse the marketplace</a></p>
+      {% endif %}
+    </div>
+    <!-- Notifications -->
+    <div class="col-md-6">
+      <h4 class="section-heading">Recent Notifications</h4>
+      {% if recent_notifications %}
+      <ul class="list-group">
+        {% for n in recent_notifications %}
+        <li class="list-group-item {% if not n.is_read %}list-group-item-warning{% endif %}" style="font-size:13px;">
+          <strong>{{ n.get_event_type_display }}</strong>
+          <span class="pull-right text-muted">{{ n.created_at|timesince }} ago</span>
+          {% if not n.is_read %}
+          <br><button class="btn btn-xs btn-link" data-mark-read="{{ n.pk }}" style="padding:0;">Mark read</button>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      <a href="{% url 'notifications:list' %}" class="btn btn-agro-secondary btn-sm">All Notifications</a>
+      {% else %}
+      <p class="text-muted">No notifications yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

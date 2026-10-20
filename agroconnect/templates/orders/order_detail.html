@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Order #{{ order.pk }} — AgroConnect{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:30px;padding-bottom:60px;">
+  <h2 class="section-heading">Order #{{ order.pk }}</h2>
+  <div class="row">
+    <div class="col-md-7">
+      <div class="panel panel-default">
+        <div class="panel-heading" style="background:#2E7D32;color:#fff;"><strong>Order Summary</strong></div>
+        <div class="panel-body">
+          <table class="table table-condensed" style="font-size:14px;">
+            <tr><td><strong>Produce</strong></td><td>{{ order.deal.offer.listing.produce_name }}</td></tr>
+            <tr><td><strong>Quantity</strong></td><td>{{ order.deal.agreed_quantity }} {{ order.deal.offer.listing.unit }}</td></tr>
+            <tr><td><strong>Agreed Price</strong></td><td>&#8358;{{ order.deal.agreed_price|floatformat:2 }}/{{ order.deal.offer.listing.unit }}</td></tr>
+            <tr><td><strong>Total</strong></td><td><strong style="color:#2E7D32;font-size:16px;">&#8358;{{ order.deal.agreed_price|floatformat:2 }}</strong></td></tr>
+            <tr><td><strong>Status</strong></td><td>{{ order.get_status_display }}</td></tr>
+            <tr><td><strong>Payment Method</strong></td><td>{{ order.get_delivery_method_display }}</td></tr>
+            <tr><td><strong>Order Date</strong></td><td>{{ order.created_at|date:"d M Y H:i" }}</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="margin-top:10px;">
+        {% if order.status == 'pending_confirmation' %}
+        <form method="post" action="{% url 'orders:confirm' order.pk %}" style="display:inline;">
+          {% csrf_token %}
+          <div class="row" style="margin-bottom:14px;">
+            <div class="col-sm-6">
+              <label><input type="radio" name="payment_method" value="pod" checked> Payment on Delivery (POD)</label>
+              <div id="pod-info" class="alert alert-agro-warning" style="font-size:12px;margin-top:6px;padding:8px;">
+                &#128200; Pay in cash when produce arrives at your location.
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <label><input type="radio" name="payment_method" value="paystack"> Pay Online (Paystack)</label>
+              <div id="paystack-info" style="display:none;" class="alert alert-agro-success" style="font-size:12px;margin-top:6px;padding:8px;">
+                &#128274; Secure online payment. You'll be redirected to Paystack.
+              </div>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-agro-primary btn-lg">Confirm Order</button>
+        </form>
+        {% endif %}
+        {% if order.status in 'pending_confirmation,confirmed,ready,pending_payment' %}
+        <form method="post" action="{% url 'orders:cancel' order.pk %}" style="display:inline;margin-left:8px;" onsubmit="return confirm('Cancel this order?');">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger btn-lg">Cancel Order</button>
+        </form>
+        {% endif %}
+        {% if order.status == 'delivered' and not order.freshness_score %}
+        <a href="#rate-form" class="btn btn-agro-secondary btn-lg" style="margin-left:8px;">Rate Freshness</a>
+        {% endif %}
+      </div>
+
+      <!-- Freshness rating form -->
+      {% if order.status == 'delivered' and not order.freshness_score %}
+      <div class="panel panel-default" id="rate-form" style="margin-top:24px;">
+        <div class="panel-heading" style="background:#fffde7;"><strong>&#11088; Rate Produce Freshness</strong></div>
+        <div class="panel-body">
+          <form method="post" action="{% url 'orders:rate' order.pk %}" class="form-agro">
+            {% csrf_token %}
+            <div class="form-group">
+              <label>Stars (1–5)</label>
+              <select name="stars" class="form-control" style="width:120px;">
+                {% for i in "12345" %}<option value="{{ forloop.counter }}">{{ forloop.counter }} &#9733;</option>{% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Review (optional)</label>
+              <textarea name="review_text" class="form-control" rows="3" placeholder="How fresh was the produce?"></textarea>
+            </div>
+            <button type="submit" class="btn btn-agro-primary">Submit Review</button>
+          </form>
+        </div>
+      </div>
+      {% elif order.freshness_score %}
+      <div class="alert alert-agro-success" style="margin-top:16px;">
+        You rated this order <strong>{{ order.freshness_score.stars }}&#9733;</strong>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Timeline sidebar -->
+    <div class="col-md-5">
+      <div class="panel panel-default">
+        <div class="panel-heading"><strong>&#128336; Order Timeline</strong></div>
+        <div class="panel-body">
+          {% include "orders/status_timeline.html" %}
+        </div>
+      </div>
+      <!-- POD instructions -->
+      {% if order.delivery_method == 'pod' and order.status == 'confirmed' %}
+      <div class="alert alert-agro-warning">
+        <strong>Payment on Delivery Instructions:</strong><br>
+        <ol style="padding-left:18px;margin:8px 0 0;font-size:13px;">
+          <li>Wait for farmer to confirm delivery date</li>
+          <li>Inspect produce on arrival</li>
+          <li>Pay farmer in cash: &#8358;{{ order.deal.agreed_price|floatformat:2 }}</li>
+          <li>Rate the freshness in your order page</li>
+        </ol>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

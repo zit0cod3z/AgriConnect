@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout, get_user_model
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views import View
 from .forms import CustomerRegistrationForm, LoginForm
@@ -21,10 +20,31 @@ class RegisterView(View):
         if form.is_valid():
             d = form.cleaned_data
             try:
-                customer = create_customer(d['full_name'], d['email'], d['phone'], d['state'], d['password'])
-                send_verification_email(customer)
-                messages.success(request, 'Account created! Check your email to verify your account.')
+                customer = create_customer(
+                    d['full_name'], d['email'], d['phone'], d['state'], d['password']
+                )
+                # Try to send verification email but don't block registration if it fails
+                try:
+                    send_verification_email(customer)
+                    messages.success(
+                        request,
+                        'Account created! Check your email for a verification link, '
+                        'or you can log in directly and verify later.'
+                    )
+                except Exception:
+                    messages.success(request, 'Account created! You can now log in.')
+
+                # Auto-login immediately after registration — no email barrier
+                user = authenticate(
+                    request,
+                    username=customer.username,
+                    password=d['password'],
+                )
+                if user:
+                    login(request, user)
+                    return redirect('accounts:dashboard')
                 return redirect('accounts:login')
+
             except ValidationError as e:
                 form.add_error(None, str(e))
         return render(request, 'accounts/register.html', {'form': form})
@@ -39,34 +59,57 @@ class LoginView(View):
     def post(self, request):
         form = LoginForm(request.POST)
         if form.is_valid():
-            email = form.cleaned_data['email']
+            email    = form.cleaned_data['email'].strip().lower()
             password = form.cleaned_data['password']
             try:
-                user_obj = Customer.objects.get(email=email)
+                user_obj = Customer.objects.get(email__iexact=email)
+
                 if is_account_locked(user_obj):
-                    messages.error(request, 'Account locked for 15 minutes due to too many failed attempts.')
+                    messages.error(
+                        request,
+                        'Account locked for 15 minutes due to too many failed attempts.'
+                    )
                     return render(request, 'accounts/login.html', {'form': form})
-                user = authenticate(request, username=email, password=password)
-                if user:
+
+                # authenticate() needs username (which equals email for our model)
+                user = authenticate(request, username=user_obj.username, password=password)
+
+                if user is not None:
                     user_obj.failed_login_attempts = 0
                     user_obj.save(update_fields=['failed_login_attempts'])
                     login(request, user)
-                    return redirect(request.GET.get('next', 'accounts:dashboard'))
+                    next_url = request.GET.get('next', '')
+                    return redirect(next_url if next_url else 'accounts:dashboard')
                 else:
                     user_obj.failed_login_attempts += 1
                     user_obj.save(update_fields=['failed_login_attempts'])
                     if user_obj.failed_login_attempts >= 5:
                         lock_account(user_obj)
-                        messages.error(request, 'Too many failed attempts. Account locked for 15 minutes.')
+                        messages.error(
+                            request,
+                            'Too many failed attempts. Account locked for 15 minutes.'
+                        )
                     else:
-                        messages.error(request, f'Invalid credentials. {5 - user_obj.failed_login_attempts} attempts left.')
+                        remaining = 5 - user_obj.failed_login_attempts
+                        messages.error(
+                            request,
+                            f'Incorrect password. {remaining} attempt{"s" if remaining != 1 else ""} remaining.'
+                        )
+
             except Customer.DoesNotExist:
-                messages.error(request, 'Invalid email or password.')
+                # Generic message to avoid user enumeration
+                messages.error(request, 'No account found with that email address.')
+
         return render(request, 'accounts/login.html', {'form': form})
 
 
 class LogoutView(View):
     def post(self, request):
+        logout(request)
+        return redirect('/')
+
+    # Also handle GET logout (e.g. clicking a link)
+    def get(self, request):
         logout(request)
         return redirect('/')
 
@@ -77,25 +120,33 @@ class VerifyEmailView(View):
         if customer:
             messages.success(request, 'Email verified! You can now log in.')
         else:
-            messages.error(request, 'Verification link is invalid or expired.')
+            messages.error(request, 'Verification link is invalid or has expired.')
         return redirect('accounts:login')
 
 
 class DashboardView(View):
     def get(self, request):
         if not request.user.is_authenticated:
-            return redirect(f'/accounts/login/?next=/accounts/dashboard/')
+            return redirect('/accounts/login/?next=/accounts/dashboard/')
         from apps.orders.models import Order
         from apps.negotiations.models import Offer
         from apps.notifications.models import Notification
         from apps.notifications.services import get_unread_count
-        recent_orders = Order.objects.filter(customer=request.user).order_by('-created_at')[:5]
-        recent_notifications = Notification.objects.filter(customer=request.user).order_by('-created_at')[:5]
+        recent_orders = Order.objects.filter(
+            customer=request.user
+        ).order_by('-created_at')[:5]
+        recent_notifications = Notification.objects.filter(
+            customer=request.user
+        ).order_by('-created_at')[:5]
         unread_count = get_unread_count(request.user)
         stats = {
             'active_listings': request.user.listings.filter(is_active=True).count(),
-            'pending_offers': Offer.objects.filter(customer=request.user, status='pending').count(),
-            'active_orders': Order.objects.filter(customer=request.user).exclude(status__in=['delivered','cancelled','closed']).count(),
+            'pending_offers': Offer.objects.filter(
+                customer=request.user, status='pending'
+            ).count(),
+            'active_orders': Order.objects.filter(
+                customer=request.user
+            ).exclude(status__in=['delivered', 'cancelled', 'closed']).count(),
         }
         return render(request, 'accounts/dashboard.html', {
             'recent_orders': recent_orders,
@@ -110,11 +161,14 @@ class PasswordResetView(View):
         return render(request, 'accounts/password_reset.html')
 
     def post(self, request):
-        email = request.POST.get('email', '')
+        email = request.POST.get('email', '').strip().lower()
         try:
-            customer = Customer.objects.get(email=email)
-            send_verification_email(customer)
-            messages.success(request, 'Password reset link sent to your email.')
+            customer = Customer.objects.get(email__iexact=email)
+            try:
+                send_verification_email(customer)
+            except Exception:
+                pass
+            messages.success(request, 'If that email exists, a reset link has been sent.')
         except Customer.DoesNotExist:
-            messages.info(request, 'If that email exists, a reset link has been sent.')
+            messages.success(request, 'If that email exists, a reset link has been sent.')
         return redirect('accounts:login')

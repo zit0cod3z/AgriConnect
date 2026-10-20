@@ -103,6 +103,11 @@ LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/accounts/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
 
+# Allow login by email (username field = email in our model)
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 # ── Internationalisation ──────────────────────────────────────────────────────
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Africa/Lagos'

@@ -2,7 +2,7 @@ from django.db import models
 
 
 class FarmStory(models.Model):
-    listing = models.ForeignKey('listings.Listing', on_delete=models.CASCADE, related_name='stories')
+    listing = models.ForeignKey('listings.Listing', on_delete=models.CASCADE, related_name='stories', null=True, blank=True)
     farmer_name = models.CharField(max_length=200)
     title = models.CharField(max_length=300)
     body = models.TextField()

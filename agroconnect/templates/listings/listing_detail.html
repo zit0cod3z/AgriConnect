@@ -27,7 +27,7 @@
 
       <h1 style="font-size:26px;font-weight:700;margin-bottom:4px;">{{ listing.produce_name }}</h1>
       <div style="margin-bottom:14px;">
-        <span class="badge-{{ season_status }}">{{ season_status|title|replace:"_":" " }}</span>
+        <span class="badge-{{ season_status }}">{% if season_status == 'in_season' %}In Season{% else %}Off Season{% endif %}</span>
         <span class="label label-default" style="margin-left:6px;">{{ listing.get_category_display }}</span>
         {% if listing.group_buy_eligible %}<span class="badge-group-buy" style="margin-left:6px;">Group Buy</span>{% endif %}
       </div>
@@ -40,13 +40,13 @@
       <div class="panel panel-default">
         <div class="panel-heading"><strong>&#11088; Farmer Freshness Score</strong></div>
         <div class="panel-body">
-          {% if freshness == 'Not yet rated' %}
+          {% if freshness.count < 3 %}
           <span class="text-muted">Not yet rated (needs 3+ reviews)</span>
           {% else %}
           <span class="stars-display">
-            {% for i in "12345" %}{% if forloop.counter <= freshness.avg_stars|floatformat:0|add:"0" %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}
+            {% for i in "12345" %}{% if forloop.counter <= freshness.average %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}
           </span>
-          <strong>{{ freshness.avg_stars|floatformat:1 }}</strong>
+          <strong>{{ freshness.average }}</strong>
           <span class="text-muted">({{ freshness.count }} reviews)</span>
           {% endif %}
         </div>

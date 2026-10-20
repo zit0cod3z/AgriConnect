@@ -33,6 +33,7 @@ def create_story(listing, farmer_name: str, title: str, body: str, photo=None) -
         title=title,
         body=body,
         photo=photo,
+        is_approved=True,  # auto-approve; admin can flag/remove if needed
     )
     return story
 

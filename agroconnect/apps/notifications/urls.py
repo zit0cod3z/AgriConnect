@@ -5,6 +5,6 @@ app_name = 'notifications'
 
 urlpatterns = [
     path('', views.NotificationListView.as_view(), name='list'),
-    path('<int:pk>/read/', views.MarkReadView.as_view(), name='mark_read'),
+    path('mark-read/<int:pk>/', views.MarkReadView.as_view(), name='mark_read'),
     path('unread-count/', views.unread_count_api, name='unread_count'),
 ]

@@ -8,7 +8,12 @@ class StoryForm(forms.Form):
         required=False,
         label='Related Listing (optional)',
         empty_label='-- No listing --',
+        to_field_name=None,
     )
+
+    def clean_listing(self):
+        listing = self.cleaned_data.get('listing')
+        return listing  # None is fine
     title = forms.CharField(max_length=300, label='Story Title')
     body = forms.CharField(
         widget=forms.Textarea(attrs={'rows': 6}),

@@ -172,3 +172,40 @@ class PasswordResetView(View):
         except Customer.DoesNotExist:
             messages.success(request, 'If that email exists, a reset link has been sent.')
         return redirect('accounts:login')
+
+
+from django.http import JsonResponse
+from django.contrib.auth import authenticate
+from django.contrib.auth.hashers import check_password
+
+
+class DebugAuthView(View):
+    """Temporary debug view — shows admin user status on Render. Remove after fixing."""
+    def get(self, request):
+        Customer = get_user_model()
+        email = 'admin@agroconnect.ng'
+        password = 'Admin@2026'
+
+        user = Customer.objects.filter(email=email).first()
+        if not user:
+            all_users = list(Customer.objects.values('pk', 'username', 'email', 'is_staff', 'is_superuser', 'is_active'))
+            return JsonResponse({'error': 'admin user not found', 'all_users': all_users})
+
+        auth_result = authenticate(request, username=user.username, password=password)
+        pw_check = check_password(password, user.password)
+
+        from django.conf import settings
+        return JsonResponse({
+            'user_found': True,
+            'pk': user.pk,
+            'username': user.username,
+            'email': user.email,
+            'is_staff': user.is_staff,
+            'is_superuser': user.is_superuser,
+            'is_active': user.is_active,
+            'has_usable_password': user.has_usable_password(),
+            'password_check': pw_check,
+            'authenticate_ok': auth_result is not None,
+            'auth_backends': settings.AUTHENTICATION_BACKENDS,
+            'total_users': Customer.objects.count(),
+        })

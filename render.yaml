@@ -34,6 +34,7 @@ services:
         value: "admin@agroconnect.ng"
 
       - key: DJANGO_SUPERUSER_PASSWORD
+        value: admin123
         sync: false
 
       - key: PAYSTACK_SECRET_KEY

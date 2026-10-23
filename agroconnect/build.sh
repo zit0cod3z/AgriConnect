@@ -11,7 +11,10 @@ python manage.py collectstatic --no-input
 echo "==> Running database migrations..."
 python manage.py migrate --no-input
 
-echo "==> Creating superuser (skipped if already exists)..."
-python manage.py create_superuser_if_missing
+echo "==> Creating/fixing admin superuser..."
+python manage.py fix_admin
+
+echo "==> Verifying admin auth..."
+python manage.py debug_auth
 
 echo "==> Build complete ✅"

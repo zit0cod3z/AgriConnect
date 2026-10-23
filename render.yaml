@@ -2,8 +2,8 @@ services:
   - type: web
     name: agroconnect
     runtime: python
-    buildCommand: "pip install -r agroconnect/requirements.txt && cd agroconnect && python manage.py collectstatic --no-input && python manage.py migrate --no-input && python manage.py create_superuser_if_missing"
-    startCommand: "cd agroconnect && gunicorn agroconnect.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+    buildCommand: "pip install -r agroconnect/requirements.txt && python agroconnect/manage.py collectstatic --no-input && python agroconnect/manage.py migrate --no-input && python agroconnect/manage.py create_superuser_if_missing"
+    startCommand: "gunicorn --chdir agroconnect agroconnect.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
     plan: free
 
     disk:

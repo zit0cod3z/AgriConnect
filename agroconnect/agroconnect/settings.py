@@ -138,26 +138,30 @@ PAYSTACK_CALLBACK_URL = os.environ.get(
 )
 
 # ── Email ─────────────────────────────────────────────────────────────────────
-if DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-else:
+# Use SMTP only if credentials are actually provided, otherwise console
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+
+if not DEBUG and EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
     EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
     EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
     DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@agroconnect.ng')
+else:
+    # Console backend — emails print to Render logs, never block registration
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # ── Security headers (production) ─────────────────────────────────────────────
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
+    # Render handles SSL at the proxy level — don't redirect again inside Django
+    SECURE_SSL_REDIRECT = False
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # Render proxy
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
@@ -170,6 +174,14 @@ CACHES = {
 }
 
 # ── CSRF trusted origins (Render) ─────────────────────────────────────────────
-CSRF_TRUSTED_ORIGINS = []
+# Accept requests from any onrender.com subdomain + any custom domain
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.onrender.com',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
 if RENDER_EXTERNAL_HOSTNAME:
-    CSRF_TRUSTED_ORIGINS = [f'https://{RENDER_EXTERNAL_HOSTNAME}']
+    CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
+
+# Also keep ALLOWED_HOSTS open so Render's hostname always works
+ALLOWED_HOSTS = ['*']

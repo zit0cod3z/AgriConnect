@@ -14,4 +14,7 @@ python manage.py migrate --no-input
 echo "==> Creating/fixing admin superuser..."
 python manage.py fix_admin
 
+echo "==> Verifying admin auth..."
+python manage.py debug_auth
+
 echo "==> Build complete ✅"

@@ -2,12 +2,10 @@ services:
   - type: web
     name: agroconnect
     runtime: python
-    rootDir: agroconnect
-    buildCommand: "./build.sh"
-    startCommand: "gunicorn agroconnect.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+    buildCommand: "pip install -r agroconnect/requirements.txt && cd agroconnect && python manage.py collectstatic --no-input && python manage.py migrate --no-input && python manage.py create_superuser_if_missing"
+    startCommand: "cd agroconnect && gunicorn agroconnect.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
     plan: free
 
-    # Persistent disk so SQLite survives redeploys (free tier = no Postgres needed)
     disk:
       name: agroconnect-data
       mountPath: /data
@@ -23,11 +21,12 @@ services:
       - key: PYTHON_VERSION
         value: "3.11.9"
 
-      # SQLite stored on the persistent disk at /data/db.sqlite3
       - key: DATABASE_PATH
         value: "/data/db.sqlite3"
 
-      # Admin auto-created on first deploy
+      - key: DJANGO_SETTINGS_MODULE
+        value: "agroconnect.settings"
+
       - key: DJANGO_SUPERUSER_EMAIL
         value: "admin@agroconnect.ng"
 
@@ -35,7 +34,7 @@ services:
         value: "admin@agroconnect.ng"
 
       - key: DJANGO_SUPERUSER_PASSWORD
-        sync: false          # ← You set this in Render dashboard (Environment tab)
+        sync: false
 
       - key: PAYSTACK_SECRET_KEY
         sync: false

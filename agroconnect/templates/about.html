@@ -1,0 +1,521 @@
+{% extends "base.html" %}
+{% block title %}About Us — AgroConnect{% endblock %}
+{% block extra_css %}
+<style>
+  .about-hero {
+    background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 60%, #F9A825 100%);
+    color: #fff;
+    padding: 80px 0 60px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .about-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    background: rgba(249,168,37,0.12);
+    border-radius: 50%;
+  }
+  .about-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: -40px;
+    width: 250px; height: 250px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%;
+  }
+  .about-hero h1 {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+  }
+  .about-hero h1 span { color: #F9A825; }
+  .about-hero p {
+    font-size: 18px;
+    opacity: 0.92;
+    max-width: 620px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* ── Mission strip ── */
+  .mission-strip {
+    background: #F9A825;
+    padding: 22px 0;
+    text-align: center;
+  }
+  .mission-strip p {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1B5E20;
+    margin: 0;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── Story section ── */
+  .story-section {
+    padding: 70px 0;
+    background: #fff;
+  }
+  .story-section h2 {
+    font-size: 30px;
+    font-weight: 800;
+    color: #1B5E20;
+    margin-bottom: 20px;
+  }
+  .story-section h2 span { color: #F9A825; }
+  .story-section p {
+    font-size: 15px;
+    color: #424242;
+    line-height: 1.85;
+    margin-bottom: 16px;
+  }
+  .story-img-placeholder {
+    background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+    border-radius: 12px;
+    height: 340px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #2E7D32;
+    font-size: 60px;
+    border: 2px dashed #a5d6a7;
+  }
+  .story-img-placeholder small {
+    font-size: 13px;
+    margin-top: 12px;
+    color: #757575;
+  }
+
+  /* ── Stats row ── */
+  .stats-row {
+    background: #f5f5f5;
+    padding: 50px 0;
+  }
+  .stat-box {
+    text-align: center;
+    padding: 20px;
+  }
+  .stat-number {
+    font-size: 42px;
+    font-weight: 800;
+    color: #2E7D32;
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 14px;
+    color: #757575;
+    margin-top: 6px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Team section ── */
+  .team-section {
+    padding: 80px 0;
+    background: #fff;
+  }
+  .team-section .section-title {
+    text-align: center;
+    margin-bottom: 50px;
+  }
+  .team-section .section-title h2 {
+    font-size: 34px;
+    font-weight: 800;
+    color: #1B5E20;
+    margin-bottom: 10px;
+  }
+  .team-section .section-title h2 span { color: #F9A825; }
+  .team-section .section-title p {
+    font-size: 15px;
+    color: #757575;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .founder-card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(46,125,50,0.10);
+    transition: transform 0.3s, box-shadow 0.3s;
+    margin-bottom: 30px;
+    border: 1px solid #e8f5e9;
+  }
+  .founder-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 16px 48px rgba(46,125,50,0.18);
+  }
+  .founder-photo {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    background: linear-gradient(160deg, #e8f5e9 0%, #c8e6c9 50%, #a5d6a7 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-bottom: 4px solid #F9A825;
+  }
+  .founder-photo .photo-placeholder-icon {
+    font-size: 72px;
+    line-height: 1;
+  }
+  .founder-photo .photo-placeholder-text {
+    font-size: 12px;
+    color: #757575;
+    margin-top: 10px;
+    background: rgba(255,255,255,0.7);
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+  .founder-photo .role-badge {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #F9A825;
+    color: #1B5E20;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 5px 18px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .founder-body {
+    padding: 24px 24px 28px;
+  }
+  .founder-name {
+    font-size: 22px;
+    font-weight: 800;
+    color: #1B5E20;
+    margin-bottom: 4px;
+  }
+  .founder-title {
+    font-size: 13px;
+    color: #F9A825;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+  }
+  .founder-bio {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.75;
+    margin-bottom: 18px;
+  }
+  .founder-quote {
+    background: #f1f8e9;
+    border-left: 4px solid #F9A825;
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    font-size: 13px;
+    color: #2E7D32;
+    font-style: italic;
+    line-height: 1.6;
+  }
+  .founder-quote::before { content: '\201C'; font-size: 22px; line-height: 0; vertical-align: -6px; color: #F9A825; margin-right: 4px; }
+  .founder-quote::after  { content: '\201D'; font-size: 22px; line-height: 0; vertical-align: -6px; color: #F9A825; margin-left: 4px; }
+
+  /* ── Values section ── */
+  .values-section {
+    background: linear-gradient(135deg, #1B5E20, #2E7D32);
+    padding: 70px 0;
+    color: #fff;
+  }
+  .values-section h2 {
+    text-align: center;
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 40px;
+    color: #fff;
+  }
+  .values-section h2 span { color: #F9A825; }
+  .value-card {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 28px 22px;
+    text-align: center;
+    margin-bottom: 20px;
+    transition: background 0.2s;
+  }
+  .value-card:hover { background: rgba(255,255,255,0.14); }
+  .value-icon { font-size: 36px; margin-bottom: 14px; }
+  .value-title { font-size: 16px; font-weight: 700; color: #F9A825; margin-bottom: 8px; }
+  .value-text  { font-size: 13px; color: rgba(255,255,255,0.82); line-height: 1.65; }
+
+  /* ── CTA ── */
+  .about-cta {
+    background: #fff;
+    padding: 70px 0;
+    text-align: center;
+  }
+  .about-cta h2 { font-size: 30px; font-weight: 800; color: #1B5E20; margin-bottom: 12px; }
+  .about-cta h2 span { color: #F9A825; }
+  .about-cta p  { font-size: 15px; color: #757575; margin-bottom: 28px; max-width: 500px; margin-left: auto; margin-right: auto; }
+
+  @media (max-width: 767px) {
+    .about-hero h1  { font-size: 28px; }
+    .about-hero p   { font-size: 15px; }
+    .stat-number    { font-size: 30px; }
+    .founder-photo  { height: 220px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══════════════════════════════════════════════════════ HERO -->
+<div class="about-hero">
+  <div class="container" style="position:relative;z-index:1;">
+    <div style="font-size:52px;margin-bottom:16px;">&#127807;</div>
+    <h1>We're on a Mission to<br><span>Feed Africa Better</span></h1>
+    <p>
+      AgroConnect was born from a simple truth — Nigerian farmers grow some of the
+      world's finest produce, but middlemen take the profit. We're here to change that.
+    </p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ MISSION STRIP -->
+<div class="mission-strip">
+  <div class="container">
+    <p>&#127759; Connecting farmers directly to buyers &nbsp;&bull;&nbsp; &#127807; Farm-gate prices &nbsp;&bull;&nbsp; &#9889; Zero registration friction for farmers</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ STORY -->
+<div class="story-section">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6" style="margin-bottom:30px;">
+        <h2>Our <span>Story</span></h2>
+        <p>
+          AgroConnect started with a conversation between three friends who kept asking
+          the same question: <strong>why does a bag of tomatoes cost ₦800 at the farm
+          gate but ₦3,500 at the market?</strong> The answer — unnecessary middlemen,
+          information gaps, and zero trust infrastructure.
+        </p>
+        <p>
+          In 2024, Ayomide Awoniyi, Kizito Adaka, and Israel Babalola set out to build a platform that gives
+          every farmer — even one who has never owned a smartphone — the tools to reach
+          buyers directly, negotiate fairly, and get paid what their harvest is worth.
+        </p>
+        <p>
+          Today, AgroConnect supports anonymous guest listings, real-time price
+          broadcasts, group-buy pooling, Paystack-powered payments, and SMS notifications
+          that work even on feature phones. We're just getting started.
+        </p>
+        <div style="margin-top:24px;">
+          <a href="{% url 'listings:catalogue' %}" class="btn btn-agro-primary btn-lg" style="margin-right:10px;">Browse Marketplace</a>
+          <a href="{% url 'listings:create' %}" class="btn btn-agro-secondary btn-lg">Post Produce</a>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="story-img-placeholder">
+          <span>&#127757;</span>
+          <small>Team photo coming soon — photoshoot loading... &#128247;</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ STATS -->
+<div class="stats-row">
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-6 col-sm-3">
+        <div class="stat-box">
+          <div class="stat-number">36+</div>
+          <div class="stat-label">States Covered</div>
+        </div>
+      </div>
+      <div class="col-xs-6 col-sm-3">
+        <div class="stat-box">
+          <div class="stat-number">0</div>
+          <div class="stat-label">Registration Fee</div>
+        </div>
+      </div>
+      <div class="col-xs-6 col-sm-3">
+        <div class="stat-box">
+          <div class="stat-number">7</div>
+          <div class="stat-label">Produce Categories</div>
+        </div>
+      </div>
+      <div class="col-xs-6 col-sm-3">
+        <div class="stat-box">
+          <div class="stat-number">3</div>
+          <div class="stat-label">Passionate Founders</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ TEAM -->
+<div class="team-section">
+  <div class="container">
+    <div class="section-title">
+      <h2>Meet the <span>Founders</span></h2>
+      <p>Three builders with one shared obsession — making agriculture work for the people who grow our food.</p>
+    </div>
+
+    <div class="row">
+
+      <!-- ── CEO ── -->
+      <div class="col-md-4">
+        <div class="founder-card">
+          <div class="founder-photo">
+            <div class="photo-placeholder-icon">&#128100;</div>
+            <div class="photo-placeholder-text">Photo coming after photoshoot &#128247;</div>
+            <div class="role-badge">&#128081; Chief Executive Officer</div>
+          </div>
+          <div class="founder-body">
+            <div class="founder-name">Awoniyi Ayomide</div>
+            <div class="founder-title">Co-Founder &amp; CEO</div>
+            <p class="founder-bio">
+              Ayomide leads AgroConnect's vision and strategy. With a deep passion for
+              agricultural economics and rural development, she drives the mission of
+              eliminating price exploitation in Nigeria's food supply chain.
+              Her leadership style is built on empathy — she spends time in farms and
+              markets to understand the real pain points before building solutions.
+            </p>
+            <div class="founder-quote">
+              If we can give every farmer a fair price, we can end food poverty in a generation.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── COO ── -->
+      <div class="col-md-4">
+        <div class="founder-card">
+          <div class="founder-photo">
+            <div class="photo-placeholder-icon">&#128101;</div>
+            <div class="photo-placeholder-text">Photo coming after photoshoot &#128247;</div>
+            <div class="role-badge">&#9881; Chief Operating Officer</div>
+          </div>
+          <div class="founder-body">
+            <div class="founder-name">Kizito Adaka</div>
+            <div class="founder-title">Co-Founder &amp; COO</div>
+            <p class="founder-bio">
+              Kizito is the engine that keeps AgroConnect running smoothly. He oversees
+              day-to-day operations, farmer onboarding, and supply chain partnerships
+              across Nigeria's six geo-political zones. His background in logistics and
+              operations management means nothing slips through the cracks — from
+              harvest signals to last-mile delivery coordination.
+            </p>
+            <div class="founder-quote">
+              Great operations are invisible — when things run perfectly, nobody notices. That's the goal.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── App Developer ── -->
+      <div class="col-md-4">
+        <div class="founder-card">
+          <div class="founder-photo">
+            <div class="photo-placeholder-icon">&#128187;</div>
+            <div class="photo-placeholder-text">Photo coming after photoshoot &#128247;</div>
+            <div class="role-badge">&#128296; App Developer</div>
+          </div>
+          <div class="founder-body">
+            <div class="founder-name">Israel Babalola</div>
+            <div class="founder-title">Co-Founder &amp; App Developer</div>
+            <p class="founder-bio">
+              Israel is the architect behind every feature you use on AgroConnect.
+              From the anonymous guest listing system to real-time group-buy pooling
+              and Paystack payment integration — he built it all. He believes technology
+              should be simple enough for a first-time smartphone user in rural Benue
+              to post their harvest in under two minutes.
+            </p>
+            <div class="founder-quote">
+              The best code is the code a farmer never has to think about — it just works.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ VALUES -->
+<div class="values-section">
+  <div class="container">
+    <h2>What We <span>Stand For</span></h2>
+    <div class="row">
+      <div class="col-sm-6 col-md-4">
+        <div class="value-card">
+          <div class="value-icon">&#9878;</div>
+          <div class="value-title">Farmer First</div>
+          <div class="value-text">Every decision we make starts with one question — does this make life better for the farmer? Zero registration fees, anonymous listings, SMS fallback. Always.</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-md-4">
+        <div class="value-card">
+          <div class="value-icon">&#128273;</div>
+          <div class="value-title">Radical Transparency</div>
+          <div class="value-text">Farm-gate prices are public. Negotiation threads are visible to both parties. No hidden fees. No surprises. Trust is our most valuable product.</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-md-4">
+        <div class="value-card">
+          <div class="value-icon">&#127758;</div>
+          <div class="value-title">Built for Nigeria</div>
+          <div class="value-text">SMS notifications for feature phones. State and LGA filters for all 36 states. Naira pricing. Harvest calendars by geo-zone. This isn't a Western product retrofitted for Africa.</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-md-4">
+        <div class="value-card">
+          <div class="value-icon">&#128200;</div>
+          <div class="value-title">Fair Economics</div>
+          <div class="value-text">Group-buy pooling lets small buyers match wholesale quantities. Price broadcasts let buyers post their needs. The market works for everyone, not just the biggest players.</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-md-4">
+        <div class="value-card">
+          <div class="value-icon">&#9889;</div>
+          <div class="value-title">Speed &amp; Simplicity</div>
+          <div class="value-text">Post a listing in under 2 minutes. No account needed. Reference code protects your listing. Freshness scores build trust automatically over time.</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-md-4">
+        <div class="value-card">
+          <div class="value-icon">&#127331;</div>
+          <div class="value-title">Seasonal Intelligence</div>
+          <div class="value-text">Our harvest calendar and season signals help buyers and farmers plan around nature — not fight it. Buy in-season, pay less, waste less.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ CTA -->
+<div class="about-cta">
+  <div class="container">
+    <div style="font-size:48px;margin-bottom:16px;">&#127807;</div>
+    <h2>Ready to Join the <span>Movement?</span></h2>
+    <p>Whether you're a farmer with a harvest to sell or a buyer looking for the freshest produce at fair prices — AgroConnect was built for you.</p>
+    <a href="{% url 'accounts:register' %}" class="btn btn-agro-primary btn-lg" style="margin-right:12px;margin-bottom:10px;">
+      Create Free Account
+    </a>
+    <a href="{% url 'listings:catalogue' %}" class="btn btn-agro-secondary btn-lg" style="margin-bottom:10px;">
+      Browse Marketplace
+    </a>
+  </div>
+</div>
+
+{% endblock %}

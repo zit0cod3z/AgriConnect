@@ -1,4 +1,4 @@
-# AgriConnect is an agricultural marketplace connecting Nigerian/African farmers directly to customers at farm-gate prices. The platform adopts a gig-economy model (inspired by Fiverr/Upwork) where farmers can post produce listings anonymously (guest access), while customers register to negotiate, order, and track deliveries.
+# AgriConnect is an agricultural marketplace connecting Nigerian/African farmers directly to customers at farm-gate prices. The platform adopts a gig-economy model (inspired by Fiverr/Upwork) where farmers can post produce listings anonymously (guest access), while customers register to negotiate, order, and track deliveries. Live demo @ https://agroconnect-kxr1.onrender.com/
 
 # Common features found on existing platforms (AgroStar, Ninjacart, Twiga Foods, WeFarm, AgroWorld, FarmX, Terrakru, myOGF, AgriMarket Nigeria)
 - Verified farmer/buyer accounts required to list or purchase

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}My Profile — AgroConnect{% endblock %}
+{% block content %}
+<div class="container" style="max-width:680px;padding-top:30px;padding-bottom:60px;">
+  <h2 class="section-heading">&#128100; My Profile</h2>
+  <p class="text-muted" style="margin-bottom:24px;">
+    Keep your details up to date — especially your phone number and address, which are used for order matching and delivery.
+  </p>
+
+  <div class="panel panel-default">
+    <div class="panel-heading" style="background:#2E7D32;color:#fff;">
+      <strong>Personal &amp; Contact Details</strong>
+    </div>
+    <div class="panel-body">
+      <form method="post" class="form-agro">
+        {% csrf_token %}
+        <div class="row">
+          {% for field in form %}
+          <div class="col-sm-{% if field.name in 'address,store_address' %}12{% else %}6{% endif %}">
+            <div class="form-group{% if field.errors %} has-error{% endif %}">
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% for e in field.errors %}<span class="help-block">{{ e }}</span>{% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="alert" style="background:#fffde7;border-left:4px solid #F9A825;font-size:13px;margin-top:8px;">
+          &#9888; <strong>Farmers:</strong> Your <strong>phone number</strong> must match the contact phone on your listings for orders to appear in your Farmer Inbox.
+          Your <strong>Farm/Store Address</strong> is shown to buyers who choose Farm Pickup.
+        </div>
+
+        <button type="submit" class="btn btn-agro-primary btn-lg btn-block" style="margin-top:16px;">
+          Save Profile
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:16px;">
+    <div class="col-sm-4">
+      <a href="{% url 'accounts:dashboard' %}" class="btn btn-agro-secondary btn-block">&#128202; Dashboard</a>
+    </div>
+    <div class="col-sm-4">
+      <a href="{% url 'orders:farmer_inbox' %}" class="btn btn-default btn-block">&#128230; Farmer Inbox</a>
+    </div>
+    <div class="col-sm-4">
+      <a href="{% url 'orders:my_ratings' %}" class="btn btn-default btn-block">&#11088; My Ratings</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

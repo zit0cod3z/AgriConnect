@@ -17,6 +17,7 @@ urlpatterns = [
     path('stories/', include('apps.stories.urls', namespace='stories')),
     path('notifications/', include('apps.notifications.urls', namespace='notifications')),
     path('admin-panel/', include('apps.admin_panel.urls', namespace='admin_panel')),
+    path('delivery/',    include('apps.delivery.urls',    namespace='delivery')),
     path('admin/', admin.site.urls),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

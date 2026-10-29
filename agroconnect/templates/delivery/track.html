@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+{% block title %}Live Tracking — Order #{{ order.pk }}{% endblock %}
+{% block extra_css %}
+<style>
+  body { background: #f5f5f5; }
+  .track-header {
+    background: linear-gradient(135deg, #1B5E20, #2E7D32);
+    color: #fff; padding: 22px 0;
+  }
+  .track-header h3 { font-size: 20px; font-weight: 800; margin: 0 0 4px; }
+  .track-header p  { margin: 0; opacity: .85; font-size: 13px; }
+  #live-map {
+    height: calc(100vh - 280px);
+    min-height: 400px;
+    width: 100%;
+    z-index: 1;
+  }
+  .info-panel {
+    background: #fff;
+    border-top: 1px solid #e0e0e0;
+    padding: 16px;
+  }
+  .status-pill {
+    display: inline-block;
+    padding: 4px 14px; border-radius: 20px;
+    font-size: 12px; font-weight: 700; text-transform: uppercase;
+  }
+  .status-active    { background: #e8f5e9; color: #2E7D32; }
+  .status-arrived   { background: #fff8e1; color: #F57F17; }
+  .status-completed { background: #e3f2fd; color: #1565C0; }
+  .info-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .info-item { font-size: 13px; color: #555; }
+  .info-item strong { color: #1B5E20; }
+  .pulse { animation: pulse 1.5s infinite; }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(46,125,50,.6); }
+    70%  { box-shadow: 0 0 0 12px rgba(46,125,50,0); }
+    100% { box-shadow: 0 0 0 0 rgba(46,125,50,0); }
+  }
+  .map-legend {
+    position: absolute; bottom: 30px; right: 10px; z-index: 999;
+    background: rgba(255,255,255,.95); border-radius: 8px;
+    padding: 10px 14px; font-size: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.15);
+  }
+  .legend-item { margin-bottom: 4px; }
+  .farmer-btn {
+    background: #2E7D32; color: #fff; border: none; border-radius: 8px;
+    padding: 12px 20px; font-weight: 700; font-size: 14px;
+    cursor: pointer; width: 100%; margin-top: 10px;
+  }
+  .farmer-btn:hover { background: #1B5E20; }
+  .arrived-btn {
+    background: #F9A825; color: #1B5E20; border: none; border-radius: 8px;
+    padding: 12px 20px; font-weight: 700; font-size: 14px;
+    cursor: pointer; width: 100%; margin-top: 8px;
+  }
+  .arrived-btn:hover { background: #F57F17; color: #fff; }
+  #update-status { font-size: 11px; color: #9E9E9E; text-align: center; margin-top: 6px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="track-header">
+  <div class="container">
+    <div class="row" style="align-items:center;">
+      <div class="col-xs-8">
+        <h3>
+          {% if tracking.delivery_type == 'pickup' %}&#127961; Pickup{% else %}&#128666; Delivery{% endif %}
+          — Order #{{ order.pk }}
+        </h3>
+        <p>{{ order.deal.offer.listing.produce_name }} &bull; &#8358;{{ order.deal.agreed_price|floatformat:2 }}</p>
+      </div>
+      <div class="col-xs-4 text-right">
+        <span class="status-pill status-{{ tracking.status }}" id="status-pill">
+          {{ tracking.get_status_display }}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Map -->
+<div style="position:relative;">
+  <div id="live-map"></div>
+  <div class="map-legend">
+    <div class="legend-item">&#128205; Farmer / Farm</div>
+    <div class="legend-item">&#127968; {% if tracking.delivery_type == 'pickup' %}Your Pickup Point{% else %}Your Location{% endif %}</div>
+    {% if is_farmer %}<div class="legend-item">&#128666; Your Live Position</div>{% endif %}
+  </div>
+</div>
+
+<!-- Info panel -->
+<div class="info-panel">
+  <div class="container">
+    <div class="info-row">
+      <div class="info-item">
+        &#128197; <strong>Type:</strong>
+        {% if tracking.delivery_type == 'pickup' %}Buyer Pickup{% else %}Farmer Delivery{% endif %}
+      </div>
+      <div class="info-item" id="eta-display">
+        {% if tracking.estimated_arrival %}
+        &#128336; <strong>ETA:</strong> {{ tracking.estimated_arrival }}
+        {% else %}
+        &#128336; <strong>ETA:</strong> <span id="eta-value">Calculating...</span>
+        {% endif %}
+      </div>
+      <div class="info-item">
+        &#128241; <strong>Last update:</strong> <span id="last-updated">just now</span>
+      </div>
+      {% if tracking.buyer_address %}
+      <div class="info-item">
+        &#128205; <strong>{% if tracking.delivery_type == 'pickup' %}Pickup point{% else %}Delivery address{% endif %}:</strong>
+        {{ tracking.buyer_address|truncatechars:50 }}
+      </div>
+      {% endif %}
+    </div>
+
+    {% if is_farmer %}
+    <!-- Farmer controls -->
+    <div class="row" style="margin-top:14px;">
+      <div class="col-sm-6">
+        <button class="farmer-btn pulse" id="share-location-btn" onclick="startSharingLocation()">
+          &#128506; Share My Live Location
+        </button>
+        <div id="update-status">Tap to start sharing your position</div>
+      </div>
+      <div class="col-sm-6">
+        <button class="arrived-btn" onclick="markArrived()">&#10003; Mark as Arrived</button>
+        <form method="post" action="{% url 'delivery:complete' order.pk %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="complete">
+          <button type="submit" class="arrived-btn" style="background:#1565C0;color:#fff;margin-top:6px;">
+            &#127881; Complete Delivery
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if is_buyer %}
+    <div style="margin-top:14px;text-align:center;">
+      <a href="{% url 'orders:detail' order.pk %}" class="btn btn-agro-secondary btn-sm">
+        &#128196; View Order Details
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ── Data from Django ──────────────────────────────────────────────
+var ORDER_ID      = {{ order.pk }};
+var POLL_URL      = "{% url 'delivery:poll'     order.pk %}";
+var UPDATE_URL    = "{% url 'delivery:update'   order.pk %}";
+var COMPLETE_URL  = "{% url 'delivery:complete' order.pk %}";
+var IS_FARMER     = {% if is_farmer %}true{% else %}false{% endif %};
+var CSRF_TOKEN    = "{{ csrf_token }}";
+
+var FARMER_LAT    = {{ tracking.farmer_lat|default:"null" }};
+var FARMER_LNG    = {{ tracking.farmer_lng|default:"null" }};
+var BUYER_LAT     = {{ tracking.buyer_lat|default:"null" }};
+var BUYER_LNG     = {{ tracking.buyer_lng|default:"null" }};
+var CURRENT_LAT   = {{ tracking.current_lat|default:"null" }};
+var CURRENT_LNG   = {{ tracking.current_lng|default:"null" }};
+var DELIVERY_TYPE = "{{ tracking.delivery_type }}";
+
+// ── Map setup ────────────────────────────────────────────────────
+var map, farmerMarker, buyerMarker, currentMarker, routeLine;
+var sharingInterval = null;
+
+var icons = {
+  farmer:  makeIcon('&#127807;', '#2E7D32'),
+  buyer:   makeIcon('&#127968;', '#1565C0'),
+  current: makeIcon('&#128666;', '#F9A825'),
+};
+
+function makeIcon(emoji, color) {
+  return L.divIcon({
+    className: '',
+    html: '<div style="font-size:28px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));">' + emoji + '</div>',
+    iconSize: [28, 28], iconAnchor: [14, 28],
+  });
+}
+
+function initMap() {
+  var centerLat = 9.0579, centerLng = 7.4951, zoom = 6;
+
+  // Centre on best available point
+  if      (CURRENT_LAT && CURRENT_LNG) { centerLat = CURRENT_LAT; centerLng = CURRENT_LNG; zoom = 14; }
+  else if (BUYER_LAT   && BUYER_LNG)   { centerLat = BUYER_LAT;   centerLng = BUYER_LNG;   zoom = 13; }
+  else if (FARMER_LAT  && FARMER_LNG)  { centerLat = FARMER_LAT;  centerLng = FARMER_LNG;  zoom = 13; }
+
+  map = L.map('live-map').setView([centerLat, centerLng], zoom);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org">OpenStreetMap</a>',
+    maxZoom: 19
+  }).addTo(map);
+
+  // Place static markers
+  if (FARMER_LAT && FARMER_LNG) {
+    farmerMarker = L.marker([FARMER_LAT, FARMER_LNG], {icon: icons.farmer})
+      .addTo(map).bindPopup('<strong>&#127807; Farm / Farmer Location</strong>');
+  }
+  if (BUYER_LAT && BUYER_LNG) {
+    buyerMarker = L.marker([BUYER_LAT, BUYER_LNG], {icon: icons.buyer})
+      .addTo(map).bindPopup('<strong>&#127968; ' + (DELIVERY_TYPE === 'pickup' ? 'Pickup Point' : 'Delivery Address') + '</strong>');
+  }
+  if (CURRENT_LAT && CURRENT_LNG) {
+    updateCurrentMarker(CURRENT_LAT, CURRENT_LNG);
+  }
+
+  fitAllMarkers();
+}
+
+function fitAllMarkers() {
+  var points = [];
+  if (FARMER_LAT  && FARMER_LNG)  points.push([FARMER_LAT, FARMER_LNG]);
+  if (BUYER_LAT   && BUYER_LNG)   points.push([BUYER_LAT, BUYER_LNG]);
+  if (CURRENT_LAT && CURRENT_LNG) points.push([CURRENT_LAT, CURRENT_LNG]);
+  if (points.length > 1) map.fitBounds(points, {padding: [40, 40]});
+}
+
+function updateCurrentMarker(lat, lng) {
+  if (currentMarker) map.removeLayer(currentMarker);
+  currentMarker = L.marker([lat, lng], {icon: icons.current})
+    .addTo(map)
+    .bindPopup('<strong>&#128666; Farmer\'s Current Position</strong>');
+  CURRENT_LAT = lat; CURRENT_LNG = lng;
+}
+
+// ── Farmer: share live location ───────────────────────────────────
+function startSharingLocation() {
+  if (!navigator.geolocation) { alert('Geolocation not supported.'); return; }
+  document.getElementById('share-location-btn').textContent = '&#128506; Sharing Live... (updating every 10s)';
+  document.getElementById('share-location-btn').classList.remove('pulse');
+
+  function sendPosition() {
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      var lat = pos.coords.latitude, lng = pos.coords.longitude;
+      fetch(UPDATE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+        body: JSON.stringify({ lat: lat, lng: lng })
+      })
+      .then(r => r.json())
+      .then(function(data) {
+        updateCurrentMarker(lat, lng);
+        fitAllMarkers();
+        var ts = new Date(data.last_updated);
+        document.getElementById('update-status').textContent =
+          'Last sent: ' + ts.toLocaleTimeString();
+      });
+    }, function() {
+      document.getElementById('update-status').textContent = 'GPS error — retrying...';
+    }, { enableHighAccuracy: true });
+  }
+
+  sendPosition();
+  sharingInterval = setInterval(sendPosition, 10000);
+}
+
+function markArrived() {
+  fetch(COMPLETE_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': CSRF_TOKEN },
+    body: 'action=arrived'
+  }).then(r => r.json()).then(function(data) {
+    document.getElementById('status-pill').textContent = 'Arrived';
+    document.getElementById('status-pill').className = 'status-pill status-arrived';
+  });
+}
+
+// ── Buyer: poll for farmer position ──────────────────────────────
+function pollLocation() {
+  fetch(POLL_URL)
+    .then(r => r.json())
+    .then(function(data) {
+      if (data.current_lat && data.current_lng) {
+        updateCurrentMarker(data.current_lat, data.current_lng);
+      }
+      if (data.estimated_arrival) {
+        document.getElementById('eta-value') &&
+          (document.getElementById('eta-value').textContent = data.estimated_arrival);
+      }
+      if (data.last_updated) {
+        var ts = new Date(data.last_updated);
+        document.getElementById('last-updated').textContent = ts.toLocaleTimeString();
+      }
+      // Update status pill
+      var pill = document.getElementById('status-pill');
+      pill.textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+      pill.className = 'status-pill status-' + data.status;
+    })
+    .catch(function() {});
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  initMap();
+  // All users poll every 10s for live position updates
+  setInterval(pollLocation, 10000);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Set Up Delivery — Order #{{ order.pk }}{% endblock %}
+{% block extra_css %}
+<style>
+  .setup-hero {
+    background: linear-gradient(135deg, #2E7D32, #1B5E20);
+    color: #fff; padding: 40px 0; text-align: center;
+  }
+  .setup-hero h2 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .setup-hero p  { opacity: .85; font-size: 14px; }
+  .option-card {
+    border: 3px solid #e0e0e0; border-radius: 12px;
+    padding: 28px 20px; text-align: center; cursor: pointer;
+    transition: all .25s; margin-bottom: 16px;
+  }
+  .option-card:hover, .option-card.selected {
+    border-color: #2E7D32; background: #f1f8e9;
+    transform: translateY(-3px); box-shadow: 0 8px 24px rgba(46,125,50,.15);
+  }
+  .option-card .opt-icon { font-size: 48px; margin-bottom: 12px; }
+  .option-card h4 { color: #2E7D32; font-weight: 700; margin-bottom: 6px; }
+  .option-card p  { font-size: 13px; color: #757575; margin: 0; }
+  #map-picker { height: 320px; border-radius: 10px; border: 2px solid #a5d6a7; margin: 16px 0; }
+  .locate-btn {
+    background: #F9A825; border: none; border-radius: 6px;
+    padding: 10px 20px; font-weight: 700; color: #1B5E20;
+    cursor: pointer; font-size: 14px; width: 100%; margin-bottom: 10px;
+  }
+  .locate-btn:hover { background: #F57F17; color: #fff; }
+  .address-box {
+    background: #e8f5e9; border-radius: 8px; padding: 12px 16px;
+    font-size: 13px; color: #2E7D32; display: none; margin-top: 8px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="setup-hero">
+  <div class="container">
+    <div style="font-size:40px;margin-bottom:10px;">&#128506;</div>
+    <h2>Set Up Delivery for Order #{{ order.pk }}</h2>
+    <p>{{ order.deal.offer.listing.produce_name }} &mdash; &#8358;{{ order.deal.agreed_price|floatformat:2 }}</p>
+  </div>
+</div>
+
+<div class="container" style="max-width:760px;padding-top:36px;padding-bottom:60px;">
+  <form method="post" id="setup-form">
+    {% csrf_token %}
+    <input type="hidden" name="buyer_lat"  id="buyer_lat_input">
+    <input type="hidden" name="buyer_lng"  id="buyer_lng_input">
+    <input type="hidden" name="buyer_address" id="buyer_address_input">
+    <input type="hidden" name="delivery_type" id="delivery_type_input" value="delivery">
+
+    <!-- Step 1: Choose type -->
+    <h4 style="color:#1B5E20;font-weight:700;margin-bottom:16px;">&#10102; Choose Delivery Method</h4>
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="option-card selected" id="opt-delivery" onclick="selectType('delivery')">
+          <div class="opt-icon">&#128666;</div>
+          <h4>Farmer Delivers</h4>
+          <p>Farmer brings the produce to your location. Share your address below.</p>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="option-card" id="opt-pickup" onclick="selectType('pickup')">
+          <div class="opt-icon">&#127961;</div>
+          <h4>Pickup from Farm</h4>
+          <p>You go to the farmer's location to collect. Farmer will share their farm address.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Buyer location -->
+    <div id="buyer-location-section" style="margin-top:10px;">
+      <h4 style="color:#1B5E20;font-weight:700;margin-bottom:12px;">&#10103; <span id="location-label">Your Delivery Location</span></h4>
+
+      <button type="button" class="locate-btn" onclick="getMyLocation()">
+        &#127757; Use My Current Location (GPS)
+      </button>
+
+      <div id="map-picker"></div>
+      <div class="address-box" id="address-display"></div>
+
+      <div class="form-group" style="margin-top:14px;">
+        <label style="font-weight:600;font-size:13px;">Or type your address manually</label>
+        <input type="text" id="manual-address" class="form-control"
+               placeholder="e.g. 14 Bode Thomas Street, Surulere, Lagos"
+               oninput="document.getElementById('buyer_address_input').value=this.value">
+      </div>
+
+      <!-- Farmer address (pickup mode) -->
+      <div id="farmer-address-section" style="display:none;margin-top:14px;">
+        <div class="form-group">
+          <label style="font-weight:600;font-size:13px;">Farmer / Farm Address</label>
+          <input type="text" name="farmer_address" class="form-control"
+                 placeholder="e.g. Gboko Road Farm, Benue State">
+        </div>
+      </div>
+    </div>
+
+    <div id="mini-map" style="height:200px;border-radius:10px;border:2px solid #a5d6a7;margin-top:16px;display:none;"></div>
+
+    <button type="submit" class="btn btn-agro-primary btn-lg btn-block" style="margin-top:24px;">
+      &#128506; Start Tracking
+    </button>
+  </form>
+</div>
+
+<!-- Leaflet (free, no API key needed) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var map, marker;
+var defaultLat = 9.0579, defaultLng = 7.4951; // Abuja centre
+
+function initMap() {
+  map = L.map('map-picker').setView([defaultLat, defaultLng], 6);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors', maxZoom: 19
+  }).addTo(map);
+  map.on('click', function(e) { placeMarker(e.latlng.lat, e.latlng.lng); });
+}
+
+function placeMarker(lat, lng) {
+  if (marker) map.removeLayer(marker);
+  marker = L.marker([lat, lng], {
+    icon: L.divIcon({
+      className: '',
+      html: '<div style="font-size:32px;margin-top:-16px;margin-left:-12px;">&#128205;</div>',
+      iconSize: [32, 32]
+    })
+  }).addTo(map);
+  document.getElementById('buyer_lat_input').value = lat;
+  document.getElementById('buyer_lng_input').value = lng;
+  reverseGeocode(lat, lng);
+}
+
+function reverseGeocode(lat, lng) {
+  fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+lat+'&lon='+lng)
+    .then(r => r.json())
+    .then(data => {
+      var addr = data.display_name || (lat.toFixed(5) + ', ' + lng.toFixed(5));
+      document.getElementById('buyer_address_input').value = addr;
+      document.getElementById('manual-address').value = addr;
+      var box = document.getElementById('address-display');
+      box.style.display = 'block';
+      box.innerHTML = '&#128205; ' + addr;
+    }).catch(function() {});
+}
+
+function getMyLocation() {
+  if (!navigator.geolocation) {
+    alert('Geolocation not supported by your browser.');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    var lat = pos.coords.latitude, lng = pos.coords.longitude;
+    map.setView([lat, lng], 15);
+    placeMarker(lat, lng);
+  }, function() {
+    alert('Could not get your location. Please click the map or type your address.');
+  });
+}
+
+function selectType(type) {
+  document.getElementById('delivery_type_input').value = type;
+  document.getElementById('opt-delivery').classList.toggle('selected', type === 'delivery');
+  document.getElementById('opt-pickup').classList.toggle('selected',  type === 'pickup');
+  var label = type === 'delivery' ? 'Your Delivery Location' : 'Your Pickup Location';
+  document.getElementById('location-label').textContent = label;
+  document.getElementById('farmer-address-section').style.display = type === 'pickup' ? 'block' : 'none';
+}
+
+document.addEventListener('DOMContentLoaded', initMap);
+</script>
+{% endblock %}

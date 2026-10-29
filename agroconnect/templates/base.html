@@ -5,17 +5,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}AgroConnect — Farm-Gate Marketplace{% endblock %}</title>
-  <!-- Bootstrap 3.4.1 -->
+  <!-- Bootstrap 3.4.1 CSS only (no navbar-fixed-top conflict) -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-  <!-- AgroConnect CSS -->
+  <!-- AgroConnect custom styles -->
   <link rel="stylesheet" href="{% static 'css/agroconnect.css' %}">
+  <style>
+    /* Reset Bootstrap body padding that conflicts with our fixed navbar */
+    body { padding-top: 0 !important; }
+  </style>
   {% block extra_css %}{% endblock %}
 </head>
 <body>
 
   {% include "partials/navbar.html" %}
 
-  <!-- Django messages -->
+  <!-- Flash messages -->
   {% if messages %}
   <div class="container" style="margin-top:10px;">
     {% for msg in messages %}
@@ -34,9 +38,10 @@
 
   {% include "partials/footer.html" %}
 
-  <!-- Scripts -->
+  <!-- jQuery + Bootstrap JS -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <!-- AgroConnect JS -->
   <script src="{% static 'js/agroconnect.js' %}"></script>
   {% block extra_js %}{% endblock %}
 </body>

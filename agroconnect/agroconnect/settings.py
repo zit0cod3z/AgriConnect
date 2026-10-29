@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'apps.seasonal',
     'apps.stories',
     'apps.admin_panel',
+    'apps.delivery',
 ]
 
 MIDDLEWARE = [

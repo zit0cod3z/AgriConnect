@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}My Ratings — AgroConnect{% endblock %}
+{% block extra_css %}
+<style>
+  .ratings-hero {
+    background: linear-gradient(135deg, #1B5E20, #2E7D32);
+    color: #fff; padding: 36px 0;
+  }
+  .ratings-hero h2 { font-size: 26px; font-weight: 800; margin:0 0 4px; }
+  .ratings-hero p  { opacity:.85; font-size:14px; margin:0; }
+  .score-card {
+    background:#fff; border:1px solid #e0e0e0; border-radius:10px;
+    padding:16px 18px; margin-bottom:12px;
+  }
+  .score-card .sc-stars { font-size:22px; margin-bottom:4px; }
+  .score-card .sc-produce { font-weight:700; color:#1B5E20; font-size:15px; }
+  .score-card .sc-meta { font-size:12px; color:#9E9E9E; margin-top:4px; }
+  .score-card .sc-review { font-size:13px; color:#555; font-style:italic; margin-top:6px; }
+  .my-score-badge {
+    display:inline-block; background:#F9A825; color:#1B5E20;
+    font-size:32px; font-weight:800; padding:14px 28px;
+    border-radius:12px; text-align:center;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ratings-hero">
+  <div class="container">
+    <h2>&#11088; My Ratings</h2>
+    <p>Reviews you've given and received.</p>
+  </div>
+</div>
+
+<div class="container" style="padding-top:28px;padding-bottom:60px;">
+
+  <!-- Farmer reputation summary (if user has phone) -->
+  {% if summary %}
+  <div class="panel panel-default" style="margin-bottom:30px;">
+    <div class="panel-heading" style="background:#2E7D32;color:#fff;">
+      <strong>&#127807; Your Farmer Reputation</strong>
+    </div>
+    <div class="panel-body">
+      <div class="row" style="align-items:center;">
+        <div class="col-xs-4 text-center">
+          {% if summary.count >= 3 %}
+          <div class="my-score-badge">{{ summary.average }}<div style="font-size:14px;font-weight:600;">/ 5.0</div></div>
+          {% else %}
+          <div class="my-score-badge" style="font-size:18px;background:#e0e0e0;color:#757575;">N/A</div>
+          {% endif %}
+        </div>
+        <div class="col-xs-8">
+          <div style="font-size:15px;font-weight:700;color:#1B5E20;margin-bottom:4px;">
+            {% if summary.count >= 3 %}
+            {% for i in "12345" %}
+            {% if forloop.counter <= summary.average %}
+            <span style="color:#F9A825;">&#9733;</span>
+            {% else %}
+            <span style="color:#e0e0e0;">&#9734;</span>
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+          </div>
+          <div style="font-size:14px;color:#555;">
+            <strong>{{ summary.count }}</strong> verified review{{ summary.count|pluralize }}
+            {% if summary.count < 3 %}
+            &mdash; <span style="color:#F57F17;">needs {{ summary.count|add:"-3"|slice:"1:" }} more to show publicly</span>
+            {% endif %}
+          </div>
+          <a href="{% url 'orders:farmer_reputation' request.user.phone %}"
+             class="btn btn-agro-secondary btn-sm" style="margin-top:10px;">
+            View Public Profile
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="row">
+    <!-- Reviews I received as farmer -->
+    <div class="col-md-6">
+      <h4 class="section-heading">Reviews Received ({{ received.count }})</h4>
+      {% if received %}
+      {% for score in received %}
+      <div class="score-card" style="border-left:4px solid #2E7D32;">
+        <div class="sc-stars">
+          {% for i in "12345" %}
+          {% if forloop.counter <= score.stars %}
+          <span style="color:#F9A825;">&#9733;</span>
+          {% else %}
+          <span style="color:#e0e0e0;">&#9734;</span>
+          {% endif %}
+          {% endfor %}
+          <strong style="color:#2E7D32;margin-left:6px;">{{ score.stars }}/5</strong>
+        </div>
+        <div class="sc-produce">&#127807; {{ score.order.deal.offer.listing.produce_name }}</div>
+        {% if score.review_text %}
+        <p class="sc-review">"{{ score.review_text }}"</p>
+        {% endif %}
+        <div class="sc-meta">
+          From: {{ score.customer.get_full_name|default:"Anonymous" }}
+          &bull; {{ score.created_at|date:"d M Y" }}
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="text-center text-muted" style="padding:40px 20px;">
+        <div style="font-size:48px;margin-bottom:10px;">&#11088;</div>
+        <p>No reviews received yet.</p>
+        {% if not request.user.phone %}
+        <p style="font-size:13px;">Add your phone number to your profile to receive reviews as a farmer.</p>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Reviews I gave as buyer -->
+    <div class="col-md-6">
+      <h4 class="section-heading">Reviews Given ({{ given.count }})</h4>
+      {% if given %}
+      {% for score in given %}
+      <div class="score-card" style="border-left:4px solid #F9A825;">
+        <div class="sc-stars">
+          {% for i in "12345" %}
+          {% if forloop.counter <= score.stars %}
+          <span style="color:#F9A825;">&#9733;</span>
+          {% else %}
+          <span style="color:#e0e0e0;">&#9734;</span>
+          {% endif %}
+          {% endfor %}
+          <strong style="color:#F9A825;margin-left:6px;">{{ score.stars }}/5</strong>
+        </div>
+        <div class="sc-produce">&#127807; {{ score.order.deal.offer.listing.produce_name }}</div>
+        {% if score.review_text %}
+        <p class="sc-review">"{{ score.review_text }}"</p>
+        {% endif %}
+        <div class="sc-meta">
+          Farmer: {{ score.farmer_phone }}
+          &bull; {{ score.created_at|date:"d M Y" }}
+          &bull; <a href="{% url 'orders:farmer_reputation' score.farmer_phone %}">View Profile</a>
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="text-center text-muted" style="padding:40px 20px;">
+        <div style="font-size:48px;margin-bottom:10px;">&#9997;</div>
+        <p>You haven't rated any orders yet.</p>
+        <a href="{% url 'orders:list' %}" class="btn btn-agro-secondary btn-sm">My Orders</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,55 +1,330 @@
 {% extends "base.html" %}
-{% block title %}Negotiation — AgroConnect{% endblock %}
-{% block content %}
-<div class="container" style="max-width:720px;padding-top:30px;padding-bottom:60px;">
-  <h2 class="section-heading">&#128203; Negotiation Thread</h2>
-  <p class="text-muted">Listing: <a href="{% url 'listings:detail' listing.reference_code %}"><strong>{{ listing.produce_name }}</strong></a></p>
+{% block title %}Negotiations — {{ listing.produce_name }}{% endblock %}
+{% block extra_css %}
+<style>
+  .neg-hero {
+    background: linear-gradient(135deg, #1B5E20, #2E7D32);
+    color: #fff; padding: 30px 0;
+  }
+  .neg-hero h3 { font-size: 22px; font-weight: 800; margin: 0 0 4px; }
+  .neg-hero p  { opacity: .85; font-size: 13px; margin: 0; }
 
+  /* Thread bubbles */
+  .bubble-wrap { margin-bottom: 14px; }
+  .bubble {
+    max-width: 85%; border-radius: 12px; padding: 14px 18px;
+    position: relative;
+  }
+  .bubble.customer {
+    background: #e8f5e9; border-left: 4px solid #2E7D32; margin-left: 0;
+  }
+  .bubble.farmer {
+    background: #fff8e1; border-left: 4px solid #F9A825;
+    margin-left: auto;
+  }
+  .bubble-actor { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+  .bubble.customer .bubble-actor { color: #2E7D32; }
+  .bubble.farmer   .bubble-actor { color: #F57F17; }
+  .bubble-price  { font-size: 22px; font-weight: 800; color: #1B5E20; }
+  .bubble-qty    { font-size: 13px; color: #555; margin-top: 2px; }
+  .bubble-msg    { font-size: 13px; color: #555; font-style: italic; margin-top: 6px; }
+  .bubble-meta   { font-size: 11px; color: #9E9E9E; margin-top: 8px; }
+  .status-chip   { display:inline-block; border-radius:10px; padding:2px 10px; font-size:11px; font-weight:700; }
+  .chip-pending   { background:#fff3e0; color:#E65100; }
+  .chip-accepted  { background:#e8f5e9; color:#2E7D32; }
+  .chip-rejected  { background:#ffebee; color:#c62828; }
+  .chip-countered { background:#e3f2fd; color:#1565C0; }
+  .chip-expired   { background:#f5f5f5; color:#9E9E9E; }
+
+  /* Offer card (farmer view) */
+  .offer-card {
+    background: #fff; border: 1px solid #e0e0e0; border-radius: 10px;
+    padding: 18px 20px; margin-bottom: 16px;
+    border-left: 4px solid #F9A825;
+  }
+  .offer-card h5 { font-weight: 700; color: #1B5E20; margin: 0 0 8px; }
+
+  /* Action panels */
+  .action-panel { background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 10px; padding: 18px; margin-top: 20px; }
+  .action-panel h5 { font-weight: 700; color: #1B5E20; margin: 0 0 14px; }
+
+  .divider-label {
+    text-align: center; color: #9E9E9E; font-size: 12px; font-weight: 600;
+    margin: 20px 0; position: relative;
+  }
+  .divider-label::before, .divider-label::after {
+    content: ''; position: absolute; top: 50%; width: 42%; height: 1px;
+    background: #e0e0e0;
+  }
+  .divider-label::before { left: 0; }
+  .divider-label::after  { right: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="neg-hero">
+  <div class="container">
+    <h3>&#128203; Negotiations — {{ listing.produce_name }}</h3>
+    <p>
+      &#8358;{{ listing.price_per_unit|floatformat:2 }}/{{ listing.unit }} &bull;
+      &#128205; {{ listing.farm_state }} &bull;
+      <a href="{% url 'listings:detail' listing.reference_code %}" style="color:#F9A825;">View Listing</a>
+    </p>
+  </div>
+</div>
+
+<div class="container" style="max-width:780px; padding-top:28px; padding-bottom:60px;">
+
+  {% if is_farmer %}
+  {# ══════════════════════════════════════════════ FARMER VIEW ══ #}
+  <div class="alert alert-agro-warning" style="font-size:13px;">
+    &#127807; You are viewing all offers on your listing. Accept, counter, or reject each one below.
+  </div>
+
+  {% if all_offers %}
+  {% for offer in all_offers %}
+  <div class="offer-card">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
+      <div>
+        <h5>&#128100; {{ offer.customer.get_full_name|default:offer.customer.username }}</h5>
+        <div style="font-size:20px; font-weight:800; color:#2E7D32;">
+          &#8358;{{ offer.proposed_price|floatformat:2 }}
+          <span style="font-size:14px; color:#555; font-weight:400;">
+            for {{ offer.proposed_quantity }} {{ listing.unit }}
+          </span>
+        </div>
+        {% if offer.message %}
+        <p style="font-size:13px; color:#555; font-style:italic; margin:6px 0 0;">
+          "{{ offer.message }}"
+        </p>
+        {% endif %}
+        <div style="font-size:11px; color:#9E9E9E; margin-top:6px;">
+          &#128197; {{ offer.created_at|date:"d M Y H:i" }} &bull;
+          Expires {{ offer.expires_at|date:"d M H:i" }}
+        </div>
+      </div>
+      <span class="status-chip chip-{{ offer.status }}">{{ offer.status|upper }}</span>
+    </div>
+
+    {# Counter-offers thread under this offer #}
+    {% if offer.counter_offers.count %}
+    <div style="margin-top:14px; padding-top:12px; border-top:1px solid #f0f0f0;">
+      <div style="font-size:12px; color:#9E9E9E; margin-bottom:8px;">COUNTER HISTORY</div>
+      {% for co in offer.counter_offers.all %}
+      <div style="background:#fff8e1; border-left:3px solid #F9A825; border-radius:0 8px 8px 0; padding:8px 12px; margin-bottom:8px;">
+        <strong style="color:#F57F17;">Your counter:</strong>
+        &#8358;{{ co.proposed_price|floatformat:2 }}
+        {% if co.message %} &mdash; <em style="font-size:12px;">{{ co.message }}</em>{% endif %}
+        <span class="status-chip chip-{{ co.status }}" style="float:right;">{{ co.status|upper }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {# Farmer actions — only on pending offers #}
+    {% if offer.status == 'pending' or offer.status == 'countered' %}
+    <div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;">
+      {# Accept offer directly #}
+      <form method="post" action="{% url 'negotiations:accept_offer' offer.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-agro-primary"
+                onclick="return confirm('Accept this offer? This will create a deal and order.')">
+          &#10003; Accept &#8358;{{ offer.proposed_price|floatformat:2 }}
+        </button>
+      </form>
+
+      {# Counter offer #}
+      <button class="btn btn-agro-secondary" type="button"
+              data-toggle="collapse" data-target="#counter-{{ offer.pk }}">
+        &#8646; Counter Offer
+      </button>
+
+      {# Reject #}
+      <form method="post" action="{% url 'negotiations:reject_offer' offer.pk %}"
+            onsubmit="return confirm('Reject this offer?');">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger btn-sm">&#10005; Reject</button>
+      </form>
+    </div>
+
+    {# Counter offer form (collapsed) #}
+    <div class="collapse" id="counter-{{ offer.pk }}" style="margin-top:12px;">
+      <div style="background:#fff8e1; border-radius:8px; padding:14px;">
+        <form method="post" action="{% url 'negotiations:counter_offer' offer.pk %}" class="form-agro">
+          {% csrf_token %}
+          <div class="row">
+            <div class="col-sm-5">
+              <div class="form-group" style="margin-bottom:0;">
+                <label style="font-size:12px;">Your Counter Price (&#8358;)</label>
+                <input type="number" name="proposed_price" class="form-control input-sm"
+                       min="0.01" step="0.01" required
+                       placeholder="{{ offer.proposed_price }}">
+              </div>
+            </div>
+            <div class="col-sm-5">
+              <div class="form-group" style="margin-bottom:0;">
+                <label style="font-size:12px;">Message (optional)</label>
+                <input type="text" name="message" class="form-control input-sm"
+                       placeholder="e.g. Best I can do at harvest">
+              </div>
+            </div>
+            <div class="col-sm-2" style="display:flex; align-items:flex-end;">
+              <button type="submit" class="btn btn-agro-primary btn-sm btn-block">Send</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    {# If deal created — show link to order #}
+    {% if offer.status == 'accepted' %}
+    {% if offer.deal %}
+    <div style="margin-top:10px;">
+      <a href="{% url 'orders:farmer_inbox' %}" class="btn btn-agro-secondary btn-sm">
+        &#128230; View in Farmer Inbox
+      </a>
+    </div>
+    {% endif %}
+    {% endif %}
+
+  </div>
+  {% endfor %}
+
+  {% else %}
+  <div class="text-center" style="padding:60px 20px; color:#9E9E9E;">
+    <div style="font-size:52px;">&#128203;</div>
+    <h4>No offers yet on this listing</h4>
+    <p>Buyers who visit your listing can make offers here.</p>
+  </div>
+  {% endif %}
+
+  {% else %}
+  {# ═══════════════════════════════════════════════ BUYER VIEW ══ #}
+
+  {% if thread %}
   <div style="margin-bottom:24px;">
     {% for item in thread %}
-    <div class="thread-item {{ item.actor }}">
-      <div>
-        <strong style="color:{% if item.actor == 'customer' %}#2E7D32{% else %}#F9A825{% endif %}">
-          {{ item.actor|title }}
-        </strong>
-        offered <strong>&#8358;{{ item.price }}</strong> for <strong>{{ item.quantity }} units</strong>
-        &mdash; <span class="label label-default">{{ item.status|upper }}</span>
-        {% if item.expires %}
-        <small class="text-muted" data-expires="{{ item.expires|date:'c' }}">&bull; checking...</small>
+    <div class="bubble-wrap">
+      <div class="bubble {{ item.actor }}">
+        <div class="bubble-actor">
+          {% if item.actor == 'customer' %}You (Buyer){% else %}Farmer{% endif %}
+        </div>
+        <div class="bubble-price">&#8358;{{ item.price|floatformat:2 }}</div>
+        <div class="bubble-qty">{{ item.quantity }} {{ listing.unit }}</div>
+        {% if item.message %}
+        <div class="bubble-msg">"{{ item.message }}"</div>
         {% endif %}
+        <div class="bubble-meta">
+          {{ item.timestamp|date:"d M Y H:i" }} &bull;
+          <span class="status-chip chip-{{ item.status }}">{{ item.status|upper }}</span>
+          {% if item.type == 'counter_offer' and item.status == 'pending' %}
+          {# Buyer can accept or reject farmer's counter offer #}
+          <div style="margin-top:10px;">
+            <form method="post" action="{% url 'negotiations:accept_counter_offer' item.id %}"
+                  style="display:inline; margin-right:6px;">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-agro-primary btn-sm"
+                      onclick="return confirm('Accept this counter offer? This creates a deal.')">
+                &#10003; Accept &#8358;{{ item.price|floatformat:2 }}
+              </button>
+            </form>
+            <form method="post" action="{% url 'negotiations:reject_offer' item.offer_id %}"
+                  style="display:inline;" onsubmit="return confirm('Reject this counter?');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger btn-sm">&#10005; Decline</button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
       </div>
-      {% if item.message %}<p style="margin:6px 0 0;font-style:italic;color:#555;">{{ item.message }}</p>{% endif %}
-      <div class="thread-meta">{{ item.timestamp|date:"d M Y H:i" }}</div>
     </div>
-    {% empty %}
-    <p class="text-muted">No offers yet.</p>
     {% endfor %}
   </div>
 
-  {% if can_offer %}
-  <div class="panel panel-default">
-    <div class="panel-heading" style="background:#e8f5e9;"><strong>Make an Offer</strong></div>
-    <div class="panel-body">
-      <form method="post" action="{% url 'negotiations:submit_offer' listing.reference_code %}" class="form-agro">
-        {% csrf_token %}
-        <div class="row">
-          <div class="col-sm-4"><div class="form-group">
-            <label>Your Price (&#8358;)</label>
-            <input type="number" name="proposed_price" class="form-control" min="0.01" step="0.01" required>
-          </div></div>
-          <div class="col-sm-4"><div class="form-group">
-            <label>Quantity ({{ listing.unit }})</label>
-            <input type="number" name="proposed_quantity" class="form-control" min="0.01" step="0.01" required>
-          </div></div>
-          <div class="col-sm-4"><div class="form-group">
-            <label>Message</label>
-            <input type="text" name="message" class="form-control" placeholder="Optional note">
-          </div></div>
-        </div>
-        <button type="submit" class="btn btn-agro-primary">Submit Offer</button>
-      </form>
-    </div>
+  {# Check if there's an accepted deal — show order link #}
+  {% for item in thread %}
+  {% if item.status == 'accepted' and item.actor == 'customer' %}
+  <div class="alert alert-agro-success">
+    &#127881; <strong>Deal accepted!</strong>
+    <a href="{% url 'orders:list' %}" class="btn btn-agro-primary btn-sm" style="margin-left:10px;">
+      View My Orders
+    </a>
   </div>
   {% endif %}
+  {% endfor %}
+
+  {% else %}
+  <div class="text-center" style="padding:40px 20px; color:#9E9E9E;">
+    <div style="font-size:48px;">&#128203;</div>
+    <p>No offers yet. Make your first offer below.</p>
+  </div>
+  {% endif %}
+
+  {# Make offer form for buyer #}
+  {% if can_offer %}
+  <div class="divider-label">Make an Offer</div>
+  <div class="action-panel">
+    <h5>&#128176; Submit Your Offer</h5>
+    <p style="font-size:13px; color:#555; margin-bottom:14px;">
+      Listed price: <strong style="color:#2E7D32;">&#8358;{{ listing.price_per_unit|floatformat:2 }}/{{ listing.unit }}</strong>
+      &bull; Available: <strong>{{ listing.quantity }} {{ listing.unit }}</strong>
+    </p>
+    <form method="post" action="{% url 'negotiations:submit_offer' listing.reference_code %}" class="form-agro">
+      {% csrf_token %}
+      <div class="row">
+        <div class="col-sm-4">
+          <div class="form-group">
+            <label>Your Offer Price (&#8358;)</label>
+            <input type="number" name="proposed_price" class="form-control"
+                   min="0.01" step="0.01" required
+                   placeholder="{{ listing.price_per_unit }}">
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="form-group">
+            <label>Quantity ({{ listing.unit }})</label>
+            <input type="number" name="proposed_quantity" class="form-control"
+                   min="0.01" step="0.01" required>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="form-group">
+            <label>Message to Farmer</label>
+            <input type="text" name="message" class="form-control"
+                   placeholder="Optional — why your price?">
+          </div>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-agro-primary btn-lg">
+        &#128203; Submit Offer
+      </button>
+    </form>
+  </div>
+  {% else %}
+  <div class="alert alert-agro-warning" style="margin-top:20px;">
+    &#9888; You have reached the maximum of 3 offer rounds on this listing.
+  </div>
+  {% endif %}
+  {% endif %}
+  {# end buyer view #}
+
+  <div style="margin-top:24px; padding-top:16px; border-top:1px solid #e0e0e0;">
+    <a href="{% url 'listings:detail' listing.reference_code %}" class="btn btn-default">
+      &#8592; Back to Listing
+    </a>
+    {% if user.is_authenticated %}
+    <a href="{% url 'orders:list' %}" class="btn btn-agro-secondary" style="margin-left:8px;">
+      &#128230; My Orders
+    </a>
+    {% if is_farmer %}
+    <a href="{% url 'orders:farmer_inbox' %}" class="btn btn-agro-primary" style="margin-left:8px;">
+      &#128230; Farmer Inbox
+    </a>
+    {% endif %}
+    {% endif %}
+  </div>
+
 </div>
 {% endblock %}

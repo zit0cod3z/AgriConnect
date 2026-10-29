@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}
+{% if order.delivery_method == 'pod' %}Your Delivery Address{% else %}Farm Pickup Details{% endif %}
+— Order #{{ order.pk }}
+{% endblock %}
+{% block extra_css %}
+<style>
+  .addr-hero { background:linear-gradient(135deg,#1B5E20,#2E7D32); color:#fff; padding:36px 0; text-align:center; }
+  .addr-hero h2 { font-size:24px; font-weight:800; margin:0 0 6px; }
+  .addr-hero p  { opacity:.85; font-size:13px; margin:0; }
+  #addr-map { height:320px; border-radius:10px; border:2px solid #a5d6a7; margin:14px 0; }
+  .locate-btn {
+    background:#F9A825; border:none; border-radius:6px;
+    padding:10px 18px; font-weight:700; color:#1B5E20;
+    cursor:pointer; font-size:14px; width:100%; margin-bottom:10px;
+  }
+  .locate-btn:hover { background:#F57F17; color:#fff; }
+  .addr-display {
+    background:#e8f5e9; border-radius:8px; padding:12px 14px;
+    font-size:13px; color:#2E7D32; margin-top:8px; display:none;
+  }
+  .pickup-info {
+    background:#fff8e1; border-radius:10px; padding:20px;
+    border-left:4px solid #F9A825; margin-bottom:20px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="addr-hero">
+  <div class="container">
+    {% if order.delivery_method == 'pod' %}
+    <div style="font-size:40px;margin-bottom:10px;">&#128205;</div>
+    <h2>Where should we deliver?</h2>
+    <p>Drop your pin or type your address. The farmer will deliver to you.</p>
+    {% else %}
+    <div style="font-size:40px;margin-bottom:10px;">&#127961;</div>
+    <h2>Pickup from Farmer</h2>
+    <p>The farmer's location is shown below. Navigate there to collect your produce.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="container" style="max-width:680px;padding-top:30px;padding-bottom:60px;">
+
+  {% if order.delivery_method == 'pickup' %}
+  <!-- Show farmer's address for pickup -->
+  {% with listing=order.deal.offer.listing %}
+  <div class="pickup-info">
+    <h4 style="margin:0 0 10px;color:#1B5E20;">&#127807; Farmer / Farm Details</h4>
+    <p style="font-size:14px;margin-bottom:6px;">
+      <strong>Produce:</strong> {{ listing.produce_name }}<br>
+      <strong>Farm State:</strong> {{ listing.farm_state }}, {{ listing.farm_lga }}<br>
+      <strong>Contact:</strong> {{ listing.contact_phone }}
+    </p>
+    {% if listing.farmer and listing.farmer.store_address %}
+    <p style="font-size:14px;margin-bottom:0;">
+      <strong>Pickup Address:</strong> {{ listing.farmer.store_address }}
+    </p>
+    {% else %}
+    <p style="font-size:13px;color:#F57F17;">
+      &#9888; Farmer hasn't set a pickup address yet. They'll be notified to add it.
+    </p>
+    {% endif %}
+  </div>
+  {% endwith %}
+
+  <div id="addr-map"></div>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="lat" id="lat-input">
+    <input type="hidden" name="lng" id="lng-input">
+    <button type="submit" class="btn btn-agro-primary btn-lg btn-block">
+      &#10003; Confirm — Start Live Map
+    </button>
+  </form>
+
+  {% else %}
+  <!-- POD — buyer provides address -->
+  <form method="post" id="addr-form" class="form-agro">
+    {% csrf_token %}
+    <input type="hidden" name="lat" id="lat-input">
+    <input type="hidden" name="lng" id="lng-input">
+
+    <h5 style="font-weight:700;color:#1B5E20;margin-bottom:12px;">
+      &#127757; Use GPS to pin your exact location
+    </h5>
+    <button type="button" class="locate-btn" onclick="getMyLocation()">
+      &#127757; Use My Current Location
+    </button>
+    <div id="addr-map"></div>
+    <div class="addr-display" id="addr-display"></div>
+
+    <div class="form-group" style="margin-top:14px;">
+      <label style="font-weight:700;">Delivery Address</label>
+      <textarea name="delivery_address" id="delivery-address" class="form-control" rows="2"
+                placeholder="e.g. 14 Bode Thomas Street, Surulere, Lagos" required>{{ default_address }}</textarea>
+    </div>
+
+    <div class="checkbox" style="margin-bottom:16px;">
+      <label>
+        <input type="checkbox" name="save_address" value="1">
+        Save this as my default address for future orders
+      </label>
+    </div>
+
+    <button type="submit" class="btn btn-agro-primary btn-lg btn-block">
+      &#128506; Confirm Address &amp; Start Tracking
+    </button>
+  </form>
+  {% endif %}
+
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var map, marker;
+var farmerLat = {{ order.pickup_lat|default:"null" }};
+var farmerLng = {{ order.pickup_lng|default:"null" }};
+var method    = "{{ order.delivery_method }}";
+
+function initMap() {
+  var lat = farmerLat || 9.0579, lng = farmerLng || 7.4951, zoom = farmerLat ? 14 : 6;
+  map = L.map('addr-map').setView([lat, lng], zoom);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap', maxZoom: 19
+  }).addTo(map);
+
+  if (method === 'pickup' && farmerLat && farmerLng) {
+    L.marker([farmerLat, farmerLng], {
+      icon: L.divIcon({ className:'', html:'<div style="font-size:32px;">&#127807;</div>', iconSize:[32,32], iconAnchor:[16,32] })
+    }).addTo(map).bindPopup('<strong>&#127807; Farm / Pickup Location</strong>').openPopup();
+    document.getElementById('lat-input').value = farmerLat;
+    document.getElementById('lng-input').value = farmerLng;
+  }
+
+  if (method === 'pod') {
+    map.on('click', function(e) { placeMarker(e.latlng.lat, e.latlng.lng); });
+  }
+}
+
+function placeMarker(lat, lng) {
+  if (marker) map.removeLayer(marker);
+  marker = L.marker([lat, lng], {
+    icon: L.divIcon({ className:'', html:'<div style="font-size:32px;margin-top:-16px;margin-left:-12px;">&#128205;</div>', iconSize:[32,32] })
+  }).addTo(map);
+  document.getElementById('lat-input').value = lat;
+  document.getElementById('lng-input').value = lng;
+  reverseGeocode(lat, lng);
+}
+
+function reverseGeocode(lat, lng) {
+  fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+lat+'&lon='+lng)
+    .then(r=>r.json()).then(function(d) {
+      var addr = d.display_name || (lat.toFixed(5)+', '+lng.toFixed(5));
+      var ta = document.getElementById('delivery-address');
+      if (ta) ta.value = addr;
+      var display = document.getElementById('addr-display');
+      if (display) { display.style.display='block'; display.innerHTML='&#128205; '+addr; }
+    }).catch(function(){});
+}
+
+function getMyLocation() {
+  if (!navigator.geolocation) { alert('Geolocation not supported.'); return; }
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+    placeMarker(pos.coords.latitude, pos.coords.longitude);
+  }, function() { alert('Could not get location. Please tap the map or type your address.'); });
+}
+
+document.addEventListener('DOMContentLoaded', initMap);
+</script>
+{% endblock %}

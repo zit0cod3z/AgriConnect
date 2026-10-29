@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout, get_user_model
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.views import View
 from .forms import CustomerRegistrationForm, LoginForm
@@ -23,6 +24,10 @@ class RegisterView(View):
                 customer = create_customer(
                     d['full_name'], d['email'], d['phone'], d['state'], d['password']
                 )
+                # Save address if provided
+                if d.get('address'):
+                    customer.address = d['address']
+                    customer.save(update_fields=['address'])
                 # Try to send verification email but don't block registration if it fails
                 try:
                     send_verification_email(customer)
@@ -147,6 +152,10 @@ class DashboardView(View):
             'active_orders': Order.objects.filter(
                 customer=request.user
             ).exclude(status__in=['delivered', 'cancelled', 'closed']).count(),
+            'farmer_pending_orders': Order.objects.filter(
+                farmer_phone=request.user.phone,
+                status='pending_confirmation'
+            ).count() if request.user.phone else 0,
         }
         return render(request, 'accounts/dashboard.html', {
             'recent_orders': recent_orders,
@@ -209,3 +218,19 @@ class DebugAuthView(View):
             'auth_backends': settings.AUTHENTICATION_BACKENDS,
             'total_users': Customer.objects.count(),
         })
+
+
+class ProfileUpdateView(LoginRequiredMixin, View):
+    def get(self, request):
+        from .forms import ProfileUpdateForm
+        form = ProfileUpdateForm(instance=request.user)
+        return render(request, 'accounts/profile.html', {'form': form})
+
+    def post(self, request):
+        from .forms import ProfileUpdateForm
+        form = ProfileUpdateForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('accounts:profile')
+        return render(request, 'accounts/profile.html', {'form': form})

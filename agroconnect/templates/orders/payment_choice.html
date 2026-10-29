@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Choose Payment Method — Order #{{ order.pk }}{% endblock %}
+{% block extra_css %}
+<style>
+  .choice-hero {
+    background: linear-gradient(135deg,#1B5E20,#2E7D32);
+    color:#fff; padding:40px 0; text-align:center;
+  }
+  .choice-hero h2 { font-size:26px; font-weight:800; margin:0 0 6px; }
+  .choice-hero p  { opacity:.85; font-size:14px; margin:0; }
+  .method-card {
+    border:3px solid #e0e0e0; border-radius:14px; padding:28px 20px;
+    text-align:center; cursor:pointer; transition:all .25s;
+    margin-bottom:16px; background:#fff;
+  }
+  .method-card:hover { border-color:#2E7D32; box-shadow:0 8px 24px rgba(46,125,50,.15); transform:translateY(-4px); }
+  .method-card.selected { border-color:#2E7D32; background:#f1f8e9; }
+  .method-icon { font-size:52px; margin-bottom:14px; }
+  .method-title { font-size:18px; font-weight:800; color:#1B5E20; margin-bottom:8px; }
+  .method-desc  { font-size:13px; color:#757575; line-height:1.6; }
+  .method-badge { display:inline-block; border-radius:12px; padding:3px 12px; font-size:11px; font-weight:700; margin-top:10px; }
+  .badge-free   { background:#e8f5e9; color:#2E7D32; }
+  .badge-secure { background:#e3f2fd; color:#1565C0; }
+  .badge-store  { background:#fff8e1; color:#F57F17; }
+  .order-summary { background:#f9f9f9; border-radius:10px; padding:18px; margin-bottom:24px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="choice-hero">
+  <div class="container">
+    <div style="font-size:40px;margin-bottom:10px;">&#127881;</div>
+    <h2>Farmer Accepted Your Order!</h2>
+    <p>Order #{{ order.pk }} — {{ order.deal.offer.listing.produce_name }} — Choose how you'd like to pay & receive.</p>
+  </div>
+</div>
+
+<div class="container" style="max-width:740px;padding-top:36px;padding-bottom:60px;">
+
+  <!-- Order summary -->
+  <div class="order-summary">
+    <div class="row">
+      <div class="col-sm-4 text-center">
+        <div style="font-size:28px;font-weight:800;color:#2E7D32;">&#8358;{{ order.deal.agreed_price|floatformat:2 }}</div>
+        <div style="font-size:12px;color:#9E9E9E;">Total Amount</div>
+      </div>
+      <div class="col-sm-4 text-center">
+        <div style="font-size:18px;font-weight:700;color:#1B5E20;">{{ order.deal.agreed_quantity }} {{ order.deal.offer.listing.unit }}</div>
+        <div style="font-size:12px;color:#9E9E9E;">{{ order.deal.offer.listing.produce_name }}</div>
+      </div>
+      <div class="col-sm-4 text-center">
+        <div style="font-size:13px;color:#555;">&#128205; {{ order.deal.offer.listing.farm_state }}</div>
+        <div style="font-size:12px;color:#9E9E9E;">Farm Location</div>
+      </div>
+    </div>
+  </div>
+
+  <h4 style="font-weight:800;color:#1B5E20;margin-bottom:20px;text-align:center;">
+    Choose Payment &amp; Delivery Method
+  </h4>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="delivery_method" id="method-input" value="pod">
+
+    <div class="row">
+      <!-- POD -->
+      <div class="col-sm-4">
+        <div class="method-card selected" id="card-pod" onclick="selectMethod('pod')">
+          <div class="method-icon">&#128200;</div>
+          <div class="method-title">Pay on Delivery</div>
+          <div class="method-desc">Pay cash when produce arrives at your door. We track delivery live.</div>
+          <span class="method-badge badge-free">&#10003; Zero fees</span>
+        </div>
+      </div>
+      <!-- Paystack -->
+      <div class="col-sm-4">
+        <div class="method-card" id="card-paystack" onclick="selectMethod('paystack')">
+          <div class="method-icon">&#128274;</div>
+          <div class="method-title">Pay Online</div>
+          <div class="method-desc">Secure payment via Paystack — card, bank transfer or USSD.</div>
+          <span class="method-badge badge-secure">&#128274; Paystack Secured</span>
+        </div>
+      </div>
+      <!-- Pickup -->
+      <div class="col-sm-4">
+        <div class="method-card" id="card-pickup" onclick="selectMethod('pickup')">
+          <div class="method-icon">&#127961;</div>
+          <div class="method-title">Farm Pickup</div>
+          <div class="method-desc">Drive to the farmer's location and pick up your produce yourself.</div>
+          <span class="method-badge badge-store">&#128506; Live map included</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- What happens next info -->
+    <div id="info-pod" style="background:#e8f5e9;border-radius:8px;padding:14px;margin-top:16px;font-size:13px;">
+      <strong>&#8594; Next step:</strong> You'll provide your delivery address and we'll start live GPS tracking.
+    </div>
+    <div id="info-paystack" style="display:none;background:#e3f2fd;border-radius:8px;padding:14px;margin-top:16px;font-size:13px;">
+      <strong>&#8594; Next step:</strong> You'll be taken straight to Paystack's secure checkout. Order confirms automatically on payment.
+    </div>
+    <div id="info-pickup" style="display:none;background:#fff8e1;border-radius:8px;padding:14px;margin-top:16px;font-size:13px;">
+      <strong>&#8594; Next step:</strong> The farmer's pickup address will be shown on a live map for you to navigate to.
+    </div>
+
+    <button type="submit" class="btn btn-agro-primary btn-lg btn-block" style="margin-top:24px;font-size:16px;">
+      Confirm My Choice &#8594;
+    </button>
+  </form>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selectMethod(m) {
+  ['pod','paystack','pickup'].forEach(function(x) {
+    document.getElementById('card-'+x).classList.toggle('selected', x===m);
+    document.getElementById('info-'+x).style.display = x===m ? 'block' : 'none';
+  });
+  document.getElementById('method-input').value = m;
+}
+document.addEventListener('DOMContentLoaded', function(){ selectMethod('pod'); });
+</script>
+{% endblock %}

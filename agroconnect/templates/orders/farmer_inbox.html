@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% block title %}Farmer Order Inbox — AgroConnect{% endblock %}
+{% block extra_css %}
+<style>
+  .inbox-hero { background:linear-gradient(135deg,#1B5E20,#2E7D32); color:#fff; padding:36px 0; }
+  .inbox-hero h2 { font-size:26px; font-weight:800; margin:0 0 4px; }
+  .inbox-hero p  { opacity:.85; font-size:14px; margin:0; }
+  .tab-nav { background:#fff; border-bottom:2px solid #e0e0e0; }
+  .tab-nav .nav-tabs { border:none; margin:0; }
+  .tab-nav .nav-tabs > li > a {
+    border:none; border-bottom:3px solid transparent;
+    padding:14px 18px; font-weight:700; font-size:13px;
+    color:#757575; border-radius:0;
+  }
+  .tab-nav .nav-tabs > li.active > a,
+  .tab-nav .nav-tabs > li > a:hover { color:#2E7D32; border-bottom-color:#2E7D32; background:transparent; }
+  .ocard { background:#fff; border:1px solid #e0e0e0; border-radius:10px; padding:18px 20px; margin-bottom:14px; transition:box-shadow .2s; }
+  .ocard:hover { box-shadow:0 4px 16px rgba(46,125,50,.12); }
+  .ocard-pending  { border-left:5px solid #F9A825; }
+  .ocard-confirm  { border-left:5px solid #2E7D32; }
+  .ocard-transit  { border-left:5px solid #1565C0; }
+  .ometa  { font-size:12px; color:#9E9E9E; margin-bottom:8px; }
+  .oprod  { font-size:17px; font-weight:700; color:#1B5E20; margin-bottom:6px; }
+  .oamt   { font-size:20px; font-weight:800; color:#2E7D32; }
+  .oinfo  { font-size:13px; color:#555; margin-top:3px; }
+  .oacts  { margin-top:14px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .bp { background:#fff8e1; color:#F57F17; border-radius:12px; padding:3px 10px; font-size:11px; font-weight:700; }
+  .bc { background:#e8f5e9; color:#2E7D32; border-radius:12px; padding:3px 10px; font-size:11px; font-weight:700; }
+  .bt { background:#e3f2fd; color:#1565C0; border-radius:12px; padding:3px 10px; font-size:11px; font-weight:700; }
+  .bd { background:#f5f5f5; color:#757575; border-radius:12px; padding:3px 10px; font-size:11px; font-weight:700; }
+  .empty-box { text-align:center; padding:60px 20px; color:#9E9E9E; }
+  .empty-box .ei { font-size:52px; margin-bottom:12px; }
+  .pulse-dot { display:inline-block; width:10px; height:10px; background:#F9A825; border-radius:50%; margin-left:6px; vertical-align:middle; animation:pd 1.5s infinite; }
+  @keyframes pd { 0%,100%{opacity:1} 50%{opacity:.3} }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="inbox-hero">
+  <div class="container">
+    <div class="row" style="align-items:center;">
+      <div class="col-xs-8">
+        <h2>&#128230; Farmer Order Inbox</h2>
+        <p>Accept, pack and dispatch orders for your listings.</p>
+      </div>
+      <div class="col-xs-4 text-right">
+        {% if total_pending %}
+        <div style="font-size:38px;font-weight:800;color:#F9A825;">{{ total_pending }}</div>
+        <div style="font-size:12px;opacity:.8;">Awaiting Acceptance</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="tab-nav">
+  <div class="container">
+    <ul class="nav nav-tabs" id="itabs">
+      <li class="active">
+        <a href="#t-pending" data-toggle="tab">
+          &#9889; Pending {% if total_pending %}<span class="pulse-dot"></span>{% endif %}
+          <span class="badge" style="background:#F9A825;color:#1B5E20;">{{ pending.count }}</span>
+        </a>
+      </li>
+      <li>
+        <a href="#t-confirmed" data-toggle="tab">
+          &#9989; Confirmed
+          <span class="badge" style="background:#2E7D32;color:#fff;">{{ confirmed.count }}</span>
+        </a>
+      </li>      <li>
+        <a href="#t-transit" data-toggle="tab">
+          &#128666; In Transit
+          <span class="badge" style="background:#1565C0;color:#fff;">{{ transit.count }}</span>
+        </a>
+      </li>
+      <li>
+        <a href="#t-done" data-toggle="tab">
+          &#128196; History
+          <span class="badge" style="background:#9E9E9E;color:#fff;">{{ completed.count }}</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="container" style="padding-top:24px;padding-bottom:60px;">
+  <div class="tab-content">
+
+    <!-- ═══ PENDING ═══ -->
+    <div class="tab-pane active" id="t-pending">
+      {% if pending %}
+      <div class="alert alert-agro-warning" style="font-size:13px;margin-bottom:20px;">
+        &#9889; <strong>{{ pending.count }} order{{ pending.count|pluralize }}</strong> waiting for your acceptance.
+      </div>
+      {% for order in pending %}
+      <div class="ocard ocard-pending">
+        <div class="ometa">Order #{{ order.pk }} &bull; {{ order.created_at|timesince }} ago &bull; <span class="bp">&#9201; Awaiting Acceptance</span></div>
+        <div class="oprod">&#127807; {{ order.deal.offer.listing.produce_name }}</div>
+        <div class="row">
+          <div class="col-sm-4">
+            <div class="oamt">&#8358;{{ order.deal.agreed_price|floatformat:2 }}</div>
+            <div class="oinfo">{{ order.deal.agreed_quantity }} {{ order.deal.offer.listing.unit }}</div>
+          </div>
+          <div class="col-sm-4">
+            <div class="oinfo">&#128100; <strong>{{ order.customer.get_full_name|default:order.customer.username }}</strong></div>
+            <div class="oinfo">&#128241; {{ order.customer.phone|default:"No phone" }}</div>
+          </div>
+          <div class="col-sm-4">
+            <div class="oinfo">&#128230; {{ order.get_delivery_method_display }}</div>
+            <div class="oinfo">&#128197; {{ order.created_at|date:"d M Y H:i" }}</div>
+          </div>
+        </div>
+        <div class="oacts">
+          <form method="post" action="{% url 'orders:farmer_accept' order.pk %}">{% csrf_token %}
+            <button type="submit" class="btn btn-agro-primary">&#10003; Accept Order</button>
+          </form>
+          <form method="post" action="{% url 'orders:farmer_reject' order.pk %}" onsubmit="return confirm('Reject this order?');">{% csrf_token %}
+            <button type="submit" class="btn btn-danger">&#10005; Reject</button>
+          </form>
+          <a href="{% url 'orders:detail' order.pk %}" class="btn btn-default btn-sm">View Details</a>
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="empty-box"><div class="ei">&#9989;</div><h4>All caught up!</h4><p>No pending orders right now.</p></div>
+      {% endif %}
+    </div>
+
+    <!-- ═══ CONFIRMED / READY ═══ -->
+    <div class="tab-pane" id="t-confirmed">
+      {% if confirmed %}
+      {% for order in confirmed %}
+      <div class="ocard ocard-confirm">
+        <div class="ometa">Order #{{ order.pk }} &bull; {{ order.updated_at|timesince }} ago &bull; <span class="bc">{{ order.get_status_display }}</span></div>
+        <div class="oprod">&#127807; {{ order.deal.offer.listing.produce_name }}</div>
+        <div class="row">
+          <div class="col-sm-4">
+            <div class="oamt">&#8358;{{ order.deal.agreed_price|floatformat:2 }}</div>
+            <div class="oinfo">{{ order.deal.agreed_quantity }} {{ order.deal.offer.listing.unit }}</div>
+          </div>
+          <div class="col-sm-4">
+            <div class="oinfo">&#128100; {{ order.customer.get_full_name|default:order.customer.username }}</div>
+            <div class="oinfo">&#128241; {{ order.customer.phone|default:"No phone" }}</div>
+          </div>
+          <div class="col-sm-4">
+            <div class="oinfo">&#128230; {{ order.get_delivery_method_display }}</div>
+          </div>
+        </div>
+        <div class="oacts">
+          {% if order.status == 'confirmed' %}
+          <form method="post" action="{% url 'orders:farmer_ready' order.pk %}">{% csrf_token %}
+            <button type="submit" class="btn btn-agro-secondary">&#128230; Mark Packed &amp; Ready</button>
+          </form>
+          {% endif %}
+          {% if order.status == 'ready' %}
+          <form method="post" action="{% url 'orders:farmer_in_transit' order.pk %}">{% csrf_token %}
+            <button type="submit" class="btn btn-agro-primary">&#128666; Mark Dispatched</button>
+          </form>
+          {% endif %}
+          <a href="{% url 'orders:detail' order.pk %}" class="btn btn-default btn-sm">View Details</a>
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="empty-box"><div class="ei">&#128230;</div><h4>No confirmed orders</h4><p>Accepted orders appear here.</p></div>
+      {% endif %}
+    </div>
+
+    <!-- ═══ IN TRANSIT ═══ -->
+    <div class="tab-pane" id="t-transit">
+      {% if transit %}
+      {% for order in transit %}
+      <div class="ocard ocard-transit">
+        <div class="ometa">Order #{{ order.pk }} &bull; <span class="bt">&#128666; In Transit</span></div>
+        <div class="oprod">&#127807; {{ order.deal.offer.listing.produce_name }}</div>
+        <div class="row">
+          <div class="col-sm-6">
+            <div class="oamt">&#8358;{{ order.deal.agreed_price|floatformat:2 }}</div>
+            <div class="oinfo">{{ order.deal.agreed_quantity }} {{ order.deal.offer.listing.unit }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div class="oinfo">&#128100; {{ order.customer.get_full_name|default:order.customer.username }}</div>
+            <div class="oinfo">&#128241; {{ order.customer.phone|default:"No phone" }}</div>
+          </div>
+        </div>
+        <div class="oacts">
+          <a href="{% url 'delivery:setup' order.pk %}" class="btn btn-agro-primary">&#128506; Open Live Map</a>
+          <a href="{% url 'orders:detail' order.pk %}" class="btn btn-default btn-sm">View Details</a>
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="empty-box"><div class="ei">&#128666;</div><h4>Nothing in transit</h4><p>Dispatched orders appear here.</p></div>
+      {% endif %}
+    </div>
+
+    <!-- ═══ HISTORY ═══ -->
+    <div class="tab-pane" id="t-done">
+      {% if completed %}
+      <div class="table-responsive">
+        <table class="table table-hover" style="font-size:13px;">
+          <thead style="background:#f5f5f5;">
+            <tr><th>#</th><th>Produce</th><th>Amount</th><th>Buyer</th><th>Status</th><th>Date</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for order in completed %}
+            <tr>
+              <td><strong>#{{ order.pk }}</strong></td>
+              <td>{{ order.deal.offer.listing.produce_name }}</td>
+              <td>&#8358;{{ order.deal.agreed_price|floatformat:2 }}</td>
+              <td>{{ order.customer.get_full_name|default:order.customer.username }}</td>
+              <td><span class="bd">{{ order.get_status_display }}</span></td>
+              <td>{{ order.created_at|date:"d M Y" }}</td>
+              <td><a href="{% url 'orders:detail' order.pk %}" class="btn btn-default btn-xs">View</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-box"><div class="ei">&#128196;</div><h4>No history yet</h4></div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

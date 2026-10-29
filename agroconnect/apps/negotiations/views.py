@@ -1,5 +1,4 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.views import View
@@ -84,16 +83,32 @@ class RejectOfferView(LoginRequiredMixin, View):
 class NegotiationThreadView(LoginRequiredMixin, View):
     def get(self, request, ref_code):
         listing = get_object_or_404(Listing, reference_code=ref_code, is_active=True)
-        thread = get_negotiation_thread(listing, request.user)
-        pending_offer = Offer.objects.filter(
-            listing=listing, customer=request.user, status='pending'
-        ).first()
-        can_offer = not Offer.objects.filter(
-            listing=listing, customer=request.user
-        ).count() >= 3
+
+        # Is the user the farmer of this listing?
+        is_farmer = (
+            listing.farmer == request.user or
+            listing.contact_phone == getattr(request.user, 'phone', None)
+        )
+
+        if is_farmer:
+            # Farmer sees ALL offers on their listing
+            all_offers = Offer.objects.filter(
+                listing=listing
+            ).prefetch_related('counter_offers').order_by('-created_at')
+            thread = None
+            can_offer = False
+        else:
+            # Buyer sees only their own thread
+            thread = get_negotiation_thread(listing, request.user)
+            all_offers = None
+            can_offer = Offer.objects.filter(
+                listing=listing, customer=request.user
+            ).count() < 3
+
         return render(request, 'negotiations/thread.html', {
             'listing': listing,
             'thread': thread,
-            'pending_offer': pending_offer,
+            'all_offers': all_offers,
             'can_offer': can_offer,
+            'is_farmer': is_farmer,
         })

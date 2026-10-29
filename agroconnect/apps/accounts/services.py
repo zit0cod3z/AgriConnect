@@ -25,6 +25,7 @@ def create_customer(full_name, email, phone, state, password):
         last_name=last_name,
         phone=phone,
         state=state,
+        address=data.get('address', '') if isinstance(data, dict) else '',
     )
     return customer
 

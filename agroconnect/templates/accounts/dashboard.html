@@ -31,6 +31,15 @@
     </div>
   </div>
 
+  {% if stats.farmer_pending_orders %}
+  <div class="alert" style="background:#fff8e1;border:2px solid #F9A825;border-radius:8px;margin-top:16px;">
+    <strong style="color:#F57F17;">&#9889; {{ stats.farmer_pending_orders }} order{{ stats.farmer_pending_orders|pluralize }} waiting for your acceptance!</strong>
+    <a href="{% url 'orders:farmer_inbox' %}" class="btn btn-agro-primary btn-sm" style="margin-left:12px;">
+      Open Farmer Inbox &#8594;
+    </a>
+  </div>
+  {% endif %}
+
   <div class="row" style="margin-top:30px;">
     <!-- Recent orders -->
     <div class="col-md-6">

@@ -42,13 +42,26 @@
         <div class="panel-body">
           {% if freshness.count < 3 %}
           <span class="text-muted">Not yet rated (needs 3+ reviews)</span>
-          {% else %}
-          <span class="stars-display">
-            {% for i in "12345" %}{% if forloop.counter <= freshness.average %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}
-          </span>
-          <strong>{{ freshness.average }}</strong>
-          <span class="text-muted">({{ freshness.count }} reviews)</span>
+          {% if freshness.count > 0 %}
+          <span style="font-size:12px;color:#9E9E9E;margin-left:6px;">({{ freshness.count }} so far)</span>
           {% endif %}
+          {% else %}
+          <div>
+            {% for i in "12345" %}
+              {% if forloop.counter <= freshness.average %}
+              <span style="color:#F9A825;font-size:20px;">&#9733;</span>
+              {% else %}
+              <span style="color:#e0e0e0;font-size:20px;">&#9734;</span>
+              {% endif %}
+            {% endfor %}
+            <strong style="font-size:16px;color:#2E7D32;margin-left:6px;">{{ freshness.average }}</strong>
+            <span class="text-muted" style="font-size:13px;">({{ freshness.count }} reviews)</span>
+          </div>
+          {% endif %}
+          <a href="{% url 'orders:farmer_reputation' listing.contact_phone %}"
+             class="btn btn-default btn-xs" style="margin-top:8px;">
+            View All Reviews
+          </a>
         </div>
       </div>
 
@@ -124,8 +137,26 @@
         </div>
       </div>
 
-      <!-- Manage listing (guest) -->
-      <div class="panel panel-default">
+        <!-- Farmer shortcut -->
+        {% if user.is_authenticated %}
+        <div class="panel panel-default" style="margin-top:16px;">
+          <div class="panel-heading" style="background:#fffde7;">
+            <strong>&#128296; Are you the farmer?</strong>
+          </div>
+          <div class="panel-body" style="font-size:13px;">
+            <p style="margin-bottom:10px;">
+              If your phone number matches <strong>{{ listing.contact_phone }}</strong>,
+              incoming orders will appear in your Farmer Inbox.
+            </p>
+            <a href="{% url 'negotiations:thread' listing.reference_code %}" class="btn btn-agro-secondary btn-sm btn-block" style="margin-bottom:6px;">
+              &#128203; View All Offers on This Listing
+            </a>
+            <a href="{% url 'orders:farmer_inbox' %}" class="btn btn-agro-primary btn-sm btn-block">
+              &#128230; Open Farmer Inbox
+            </a>
+          </div>
+        </div>
+        {% endif %}
         <div class="panel-heading"><strong>&#128295; Manage This Listing</strong></div>
         <div class="panel-body">
           <p style="font-size:12px;">Are you the farmer? Use your reference code + phone to edit or delete.</p>

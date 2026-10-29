@@ -28,31 +28,7 @@ body {
 a { color: var(--green); }
 a:hover { color: var(--green-dark); text-decoration: none; }
 
-/* ── Navbar ── */
-.navbar-agroconnect {
-  background-color: var(--green);
-  border: none;
-  border-radius: 0;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-}
-.navbar-agroconnect .navbar-brand {
-  color: var(--white) !important;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 1px;
-}
-.navbar-agroconnect .navbar-brand span { color: var(--yellow); }
-.navbar-agroconnect .nav > li > a {
-  color: rgba(255,255,255,0.85) !important;
-  font-weight: 500;
-  transition: color 0.2s;
-}
-.navbar-agroconnect .nav > li > a:hover,
-.navbar-agroconnect .nav > li.active > a {
-  color: var(--yellow) !important;
-  background: transparent;
-}
-.navbar-agroconnect .navbar-toggle .icon-bar { background: var(--white); }
+/* ── Navbar — handled inline in navbar.html ── */
 
 /* ── Buttons ── */
 .btn-agro-primary {
